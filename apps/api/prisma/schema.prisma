@@ -1,0 +1,708 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  HR
+  MANAGER
+  SUPERVISOR
+  EMPLOYEE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  INACTIVE
+  PROBATION
+  SUSPENDED
+  TERMINATED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  HALF_DAY
+  ABSENT
+  ON_LEAVE
+  HOLIDAY
+  WEEKEND
+  NOT_CLOCKED_OUT
+}
+
+enum CorrectionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeaveStatus {
+  PENDING_SUPERVISOR
+  PENDING_MANAGER
+  PENDING_HR
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum HolidayType {
+  PUBLIC
+  OPTIONAL
+  COMPANY
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  employees             Employee[]
+  departments           Department[]
+  designations          Designation[]
+  employmentHistories   EmploymentHistory[]
+  users                 User[]
+  shifts                Shift[]
+  shiftAssignments      ShiftAssignment[]
+  attendances           Attendance[]
+  attendanceCorrections AttendanceCorrection[]
+  attendanceAudits      AttendanceAudit[]
+  attendanceSetting     CompanyAttendanceSetting?
+
+  leaveTypes             LeaveType[]
+  leaveBalances          LeaveBalance[]
+  holidays               Holiday[]
+  leaveRequests          LeaveRequest[]
+  leaveApprovalHistories LeaveApprovalHistory[]
+  notifications          Notification[]
+
+  assets                 Asset[]
+  assetAssignments       AssetAssignment[]
+  assetMaintenances      AssetMaintenance[]
+}
+
+model Department {
+  id        String     @id @default(uuid())
+  name      String
+  status    UserStatus @default(ACTIVE)
+  companyId String
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employees Employee[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+model Designation {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  status      UserStatus @default(ACTIVE)
+  companyId   String
+  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employees   Employee[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+model Employee {
+  id           String           @id @default(uuid())
+  employeeCode String
+  name         String
+  email        String
+  role         String           @default("EMPLOYEE")
+  status       EmploymentStatus @default(ACTIVE)
+  companyId    String
+  company      Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  userId       String?          @unique
+  user         User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  departmentId String?
+  department   Department?      @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  designationId String?
+  designation   Designation?     @relation(fields: [designationId], references: [id], onDelete: SetNull)
+
+  supervisorId String?
+  supervisor   Employee?        @relation("SupervisorToSubordinates", fields: [supervisorId], references: [id], onDelete: SetNull)
+  subordinates Employee[]       @relation("SupervisorToSubordinates")
+
+  joiningDate   DateTime          @default(now())
+  deactivatedAt DateTime?
+  history       EmploymentHistory[]
+
+  shiftAssignments ShiftAssignment[]
+  attendances      Attendance[]
+  attendanceAudits AttendanceAudit[]
+
+  leaveBalances    LeaveBalance[]
+  leaveRequests    LeaveRequest[]
+
+  assignedAssets   Asset[]           @relation("CurrentAssetAssignments")
+  assetAssignments AssetAssignment[] @relation("EmployeeAssetHistory")
+
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([companyId, employeeCode])
+  @@unique([companyId, email])
+  @@index([companyId])
+  @@index([departmentId])
+  @@index([designationId])
+  @@index([supervisorId])
+}
+
+model EmploymentHistory {
+  id            String    @id @default(uuid())
+  employeeId    String
+  employee      Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  companyId     String
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  eventType     String    // CREATED, STATUS_CHANGE, DEPARTMENT_CHANGE, DESIGNATION_CHANGE, SUPERVISOR_CHANGE, DEACTIVATED
+  previousValue String?
+  newValue      String?
+  effectiveDate DateTime  @default(now())
+  reason        String?
+  changedById   String?
+  changedBy     User?     @relation(fields: [changedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+
+  @@index([employeeId])
+  @@index([companyId])
+}
+
+model User {
+  id             String              @id @default(uuid())
+  name           String
+  email          String              @unique
+  passwordHash   String
+  role           UserRole            @default(EMPLOYEE)
+  status         UserStatus          @default(ACTIVE)
+  companyId      String
+  company        Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employee       Employee?
+  historyChanges EmploymentHistory[]
+  refreshTokens  RefreshToken[]
+
+  assignedShifts         ShiftAssignment[]
+  correctionRequests     AttendanceCorrection[] @relation("CorrectionRequestedBy")
+  correctionApprovals    AttendanceCorrection[] @relation("CorrectionApprovedBy")
+  attendanceAuditChanges AttendanceAudit[]
+
+  leaveApprovalHistories     LeaveApprovalHistory[]
+  createdHolidays            Holiday[]
+  notifications              Notification[]
+
+  assetsAssigned             AssetAssignment[]  @relation("AssetAssignedBy")
+  assetsReturned             AssetAssignment[]  @relation("AssetReturnedBy")
+  maintenanceTicketsCreated  AssetMaintenance[] @relation("MaintenanceCreatedBy")
+
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([companyId])
+  @@index([email])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// =========================================================================
+// WEEK 3: SHIFT AND ATTENDANCE MANAGEMENT MODELS
+// =========================================================================
+
+model Shift {
+  id                   String            @id @default(uuid())
+  companyId            String
+  company              Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name                 String
+  code                 String
+  startTime            String            // "09:00" in 24hr format
+  endTime              String            // "18:00" in 24hr format
+  breakDurationMinutes Int               @default(60)
+  gracePeriodMinutes   Int               @default(10)
+  workingDays          String[]          @default(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"])
+  timezone             String            @default("Asia/Kolkata")
+  isOvernight          Boolean           @default(false)
+  status               UserStatus        @default(ACTIVE)
+
+  assignments          ShiftAssignment[]
+  attendances          Attendance[]
+
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([status])
+}
+
+model ShiftAssignment {
+  id            String      @id @default(uuid())
+  companyId     String
+  company       Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employeeId    String
+  employee      Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shiftId       String
+  shift         Shift       @relation(fields: [shiftId], references: [id], onDelete: Restrict)
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  assignedById  String?
+  assignedBy    User?       @relation(fields: [assignedById], references: [id], onDelete: SetNull)
+
+  attendances   Attendance[]
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([shiftId])
+  @@index([effectiveFrom, effectiveTo])
+}
+
+model Attendance {
+  id                    String                 @id @default(uuid())
+  companyId             String
+  company               Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employeeId            String
+  employee              Employee               @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shiftId               String?
+  shift                 Shift?                 @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  shiftAssignmentId     String?
+  shiftAssignment       ShiftAssignment?       @relation(fields: [shiftAssignmentId], references: [id], onDelete: SetNull)
+
+  attendanceDate        String                 // "YYYY-MM-DD" local company calendar date
+  clockIn               DateTime?
+  clockOut              DateTime?
+  status                AttendanceStatus       @default(PRESENT)
+
+  lateMinutes           Int                    @default(0)
+  earlyDepartureMinutes Int                    @default(0)
+  workedMinutes         Int                    @default(0)
+  breakMinutes          Int                    @default(0)
+  overtimeMinutes       Int                    @default(0)
+
+  corrections           AttendanceCorrection[]
+  auditLogs             AttendanceAudit[]
+
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@unique([companyId, employeeId, attendanceDate])
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([attendanceDate])
+  @@index([status])
+}
+
+model AttendanceCorrection {
+  id                 String           @id @default(uuid())
+  companyId          String
+  company            Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  attendanceId       String
+  attendance         Attendance       @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+
+  requestedById      String
+  requestedBy        User             @relation("CorrectionRequestedBy", fields: [requestedById], references: [id], onDelete: Cascade)
+  approvedById       String?
+  approvedBy         User?            @relation("CorrectionApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  previousClockIn    DateTime?
+  previousClockOut   DateTime?
+  correctedClockIn   DateTime?
+  correctedClockOut  DateTime?
+  reason             String
+  status             CorrectionStatus @default(PENDING)
+
+  createdAt          DateTime         @default(now())
+  reviewedAt         DateTime?
+
+  @@index([companyId])
+  @@index([attendanceId])
+  @@index([status])
+}
+
+model AttendanceAudit {
+  id             String      @id @default(uuid())
+  companyId      String
+  company        Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employeeId     String
+  employee       Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  attendanceId   String?
+  attendance     Attendance? @relation(fields: [attendanceId], references: [id], onDelete: SetNull)
+
+  action         String      // CLOCK_IN, CLOCK_OUT, HR_CORRECTION, SYSTEM_RECALCULATION
+  previousValues Json?
+  newValues      Json?
+  reason         String?
+
+  changedById    String?
+  changedBy      User?       @relation(fields: [changedById], references: [id], onDelete: SetNull)
+
+  createdAt      DateTime    @default(now())
+
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([attendanceId])
+}
+
+model CompanyAttendanceSetting {
+  id                          String   @id @default(uuid())
+  companyId                   String   @unique
+  company                     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  timezone                    String   @default("Asia/Kolkata")
+  gracePeriodMinutes          Int      @default(10)
+  defaultBreakMinutes         Int      @default(60)
+  isBreakPaid                 Boolean  @default(false)
+  workingDays                 String[] @default(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"])
+  weeklyOvertimeThresholdHours Float   @default(40.0)
+  halfDayThresholdMinutes     Int      @default(240)
+  fullDayThresholdMinutes     Int      @default(480)
+
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+}
+
+// =========================================================================
+// WEEK 4: LEAVE MANAGEMENT AND APPROVAL WORKFLOW MODELS
+// =========================================================================
+
+model LeaveType {
+  id                   String        @id @default(uuid())
+  companyId            String
+  company              Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name                 String
+  code                 String
+  description          String?
+  paid                 Boolean       @default(true)
+  requiresApproval     Boolean       @default(true)
+  maximumDays          Float         @default(30)
+  minimumNoticeDays    Int           @default(1)
+  allowHalfDay         Boolean       @default(true)
+  allowCarryForward    Boolean       @default(false)
+  allowNegativeBalance Boolean       @default(false)
+  status               UserStatus    @default(ACTIVE)
+
+  balances             LeaveBalance[]
+  requests             LeaveRequest[]
+
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([status])
+}
+
+model LeaveBalance {
+  id                 String     @id @default(uuid())
+  companyId          String
+  company            Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employeeId         String
+  employee           Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId        String
+  leaveType          LeaveType  @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+
+  periodStart        DateTime
+  periodEnd          DateTime
+  allocatedDays      Float      @default(0)
+  usedDays           Float      @default(0)
+  pendingDays        Float      @default(0)
+  carriedForwardDays Float      @default(0)
+  adjustedDays       Float      @default(0)
+
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  @@unique([companyId, employeeId, leaveTypeId, periodStart])
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([leaveTypeId])
+}
+
+model Holiday {
+  id          String      @id @default(uuid())
+  companyId   String
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  date        String      // "YYYY-MM-DD" local company calendar date
+  description String?
+  holidayType HolidayType @default(PUBLIC)
+  status      UserStatus  @default(ACTIVE)
+
+  createdById String?
+  createdBy   User?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([companyId, date])
+  @@index([companyId])
+  @@index([date])
+}
+
+model LeaveRequest {
+  id                 String                @id @default(uuid())
+  companyId          String
+  company            Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employeeId         String
+  employee           Employee              @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId        String
+  leaveType          LeaveType             @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+
+  startDate          String                // "YYYY-MM-DD"
+  endDate            String                // "YYYY-MM-DD"
+  startHalfDay       Boolean               @default(false)
+  endHalfDay         Boolean               @default(false)
+  days               Float                 // Calculated business days (excluding weekends & holidays)
+  reason             String
+  status             LeaveStatus           @default(PENDING_SUPERVISOR)
+  currentStage       String                @default("SUPERVISOR") // SUPERVISOR, MANAGER, HR, COMPLETED
+  
+  rejectionReason    String?
+  cancellationReason String?
+  cancelledAt        DateTime?
+
+  approvalHistory    LeaveApprovalHistory[]
+
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([leaveTypeId])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+model LeaveApprovalHistory {
+  id             String       @id @default(uuid())
+  companyId      String
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leaveRequestId String
+  leaveRequest   LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+
+  action         String       // SUBMITTED, SUPERVISOR_APPROVED, MANAGER_APPROVED, HR_APPROVED, REJECTED, CANCELLED
+  previousStatus String?
+  newStatus      String
+  actorId        String
+  actorRole      String
+  comments       String?
+
+  user           User?        @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime     @default(now())
+
+  @@index([companyId])
+  @@index([leaveRequestId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title     String
+  message   String
+  link      String?
+  type      String   @default("SYSTEM") // LEAVE_REQUEST, LEAVE_STATUS, ATTENDANCE, SYSTEM
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([isRead])
+}
+
+// =========================================================================
+// WEEK 5: ASSET AND INVENTORY MANAGEMENT MODELS
+// =========================================================================
+
+enum AssetCategory {
+  LAPTOP
+  DESKTOP
+  MOBILE
+  TABLET
+  PERIPHERAL
+  FURNITURE
+  NETWORKING
+  VEHICLE
+  OTHER
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  UNDER_MAINTENANCE
+  RETIRED
+  DISPOSED
+}
+
+enum AssetCondition {
+  NEW
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+  DAMAGED
+}
+
+enum AssetAssignmentStatus {
+  ACTIVE
+  RETURNED
+  TRANSFERRED
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_PARTS
+  COMPLETED
+  CANCELLED
+}
+
+model Asset {
+  id                 String             @id @default(uuid())
+  assetCode          String             // Unique within company, e.g. "AST-2026-001"
+  name               String
+  description        String?
+  category           AssetCategory      @default(LAPTOP)
+  brand              String?
+  model              String?
+  serialNumber       String?
+  
+  purchaseDate       DateTime?
+  purchaseCost       Float?
+  warrantyExpiry     DateTime?
+  warrantyDetails    String?
+  vendor             String?
+  
+  condition          AssetCondition     @default(EXCELLENT)
+  status             AssetStatus        @default(AVAILABLE)
+  
+  companyId          String
+  company            Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  assignedEmployeeId String?
+  assignedEmployee   Employee?          @relation("CurrentAssetAssignments", fields: [assignedEmployeeId], references: [id], onDelete: SetNull)
+  
+  assignments        AssetAssignment[]
+  maintenanceTickets AssetMaintenance[]
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@unique([companyId, assetCode])
+  @@index([companyId])
+  @@index([category])
+  @@index([status])
+  @@index([assignedEmployeeId])
+  @@index([serialNumber])
+}
+
+model AssetAssignment {
+  id                    String                @id @default(uuid())
+  companyId             String
+  company               Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  assetId               String
+  asset                 Asset                 @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  employeeId            String
+  employee              Employee              @relation("EmployeeAssetHistory", fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  assignedDate          DateTime              @default(now())
+  returnDate            DateTime?
+  
+  assignedById          String?
+  assignedBy            User?                 @relation("AssetAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+  
+  returnedById          String?
+  returnedBy            User?                 @relation("AssetReturnedBy", fields: [returnedById], references: [id], onDelete: SetNull)
+  
+  status                AssetAssignmentStatus @default(ACTIVE)
+  
+  conditionAtAssignment AssetCondition?
+  conditionAtReturn     AssetCondition?
+  
+  notes                 String?
+  returnNotes           String?
+  
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([companyId])
+  @@index([assetId])
+  @@index([employeeId])
+  @@index([status])
+}
+
+model AssetMaintenance {
+  id                 String              @id @default(uuid())
+  companyId          String
+  company            Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  assetId            String
+  asset              Asset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  ticketNumber       String
+  issueDescription   String
+  priority           MaintenancePriority @default(MEDIUM)
+  status             MaintenanceStatus   @default(OPEN)
+  
+  reportedDate       DateTime            @default(now())
+  assignedTechnician String?
+  vendor             String?
+  cost               Float?
+  resolutionNotes    String?
+  completedDate      DateTime?
+  
+  createdById        String?
+  createdBy          User?               @relation("MaintenanceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@unique([companyId, ticketNumber])
+  @@index([companyId])
+  @@index([assetId])
+  @@index([status])
+  @@index([priority])
+}
+
