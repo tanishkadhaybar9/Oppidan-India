@@ -6,7 +6,6 @@ import {
   ArrowRight,
   AlertCircle,
   CheckCircle2,
-  ChevronLeft,
   Umbrella,
   Send,
   Info,

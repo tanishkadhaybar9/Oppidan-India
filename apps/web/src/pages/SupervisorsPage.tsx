@@ -10,7 +10,6 @@ import {
   X,
   Loader2,
   CheckCircle2,
-  ArrowRight,
   ShieldAlert,
 } from "lucide-react";
 import {
@@ -19,7 +18,7 @@ import {
   updateEmployee,
   type SupervisorHierarchyResponse,
 } from "../services/employeeService";
-import type { Department, EmployeeSummary } from "../types/employee";
+import type { Department } from "../types/employee";
 import { useAuth } from "../hooks/useAuth";
 import {
   PageContainer,

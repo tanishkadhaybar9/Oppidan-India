@@ -18,7 +18,7 @@ interface RequestOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
-export interface ApiError extends ApiResponse<never> {
+export interface ApiError<T = unknown> extends ApiResponse<T> {
   statusCode?: number;
   retryAfter?: number;
   isRateLimit?: boolean;

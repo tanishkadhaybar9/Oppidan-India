@@ -10,7 +10,6 @@ import {
   Wrench,
   ShieldCheck,
   CheckCircle2,
-  AlertCircle,
   Loader2,
   X,
   User,

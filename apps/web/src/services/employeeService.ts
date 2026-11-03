@@ -2,6 +2,7 @@ import { apiClient } from "./api";
 import type {
   PaginatedEmployees,
   EmployeeDetail,
+  EmployeeSummary,
   CreateEmployeePayload,
   UpdateEmployeePayload,
   HistoryEntry,
