@@ -35,6 +35,7 @@ app.use(
 
       const isAllowed =
         origin === FRONTEND_URL ||
+        /^https:\/\/.*\.vercel\.app$/.test(origin) ||
         /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
       if (isAllowed) {

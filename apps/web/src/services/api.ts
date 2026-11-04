@@ -107,24 +107,43 @@ async function executeFetch<T>(url: string, options: RequestOptions, skipAuth: b
     throw error;
   }
 
-  const data = (await response.json().catch(() => {
-    let fallbackMsg = "Network response was not JSON";
-    if (response.status === 404) {
-      fallbackMsg = `API endpoint not found (404). Check if backend URL (${API_BASE_URL || "not configured"}) is running.`;
-    } else if (response.status >= 500) {
-      fallbackMsg = `Backend server error (${response.status}). The service may be starting up on Render or encountered an error.`;
-    } else if (response.statusText) {
-      fallbackMsg = response.statusText;
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+
+  let data: ApiResponse<T>;
+
+  if (isJson) {
+    try {
+      data = (await response.json()) as ApiResponse<T>;
+    } catch {
+      data = {
+        success: false,
+        message: "Failed to parse JSON response from server.",
+      };
     }
-    return {
-      success: response.ok,
+  } else {
+    // Non-JSON response received (e.g. HTML 404, Vercel SPA fallback, or server error page)
+    console.error(`[API Error] Received non-JSON response from: ${url} (status: ${response.status}, content-type: ${contentType})`);
+
+    let fallbackMsg = "Backend returned an unexpected non-JSON response.";
+    if (!API_BASE_URL) {
+      fallbackMsg = "Backend URL is not configured. Please add VITE_API_BASE_URL in Vercel Environment Variables and Redeploy.";
+    } else if (response.status === 404) {
+      fallbackMsg = `API endpoint not found (404) at ${url}.`;
+    } else if (response.status >= 500) {
+      fallbackMsg = `Backend server error (${response.status}) at ${url}. Check Render server logs.`;
+    }
+
+    data = {
+      success: false,
       message: fallbackMsg,
     };
-  })) as ApiResponse<T>;
+  }
 
-  if (!response.ok) {
+  if (!response.ok || !isJson) {
     const error: ApiError = {
       ...data,
+      success: false,
       statusCode: response.status,
     };
     throw error;
