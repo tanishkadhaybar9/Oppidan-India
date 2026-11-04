@@ -240,7 +240,7 @@ export async function getMyLeaveRequests(req: Request, res: Response, next: Next
       page: parseInt(page),
       limit: parseInt(limit),
     });
-    res.json({ success: true, ...data });
+    res.json({ success: true, data });
   } catch (e) { next(e); }
 }
 
@@ -280,7 +280,7 @@ export async function listLeaveRequests(req: Request, res: Response, next: NextF
       page: parseInt(page),
       limit: parseInt(limit),
     });
-    res.json({ success: true, ...data });
+    res.json({ success: true, data });
   } catch (e) { next(e); }
 }
 
@@ -352,7 +352,7 @@ export async function getApprovalsQueue(req: Request, res: Response, next: NextF
       limit: parseInt(limit),
     });
 
-    res.json({ success: true, ...data });
+    res.json({ success: true, data });
   } catch (e) { next(e); }
 }
 
@@ -437,7 +437,7 @@ export async function cancelLeaveRequest(req: Request, res: Response, next: Next
       user.role,
       parsed.data.cancellationReason
     );
-    res.json({ success: true, ...data });
+    res.json({ success: true, message: data.message });
   } catch (e) { next(e); }
 }
 
