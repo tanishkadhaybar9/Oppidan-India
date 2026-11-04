@@ -1,6 +1,9 @@
 import type { ApiResponse } from "../types/auth";
 
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
+const defaultApiUrl = import.meta.env.PROD
+  ? "https://erms-api-xp4w.onrender.com"
+  : "";
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || defaultApiUrl).trim();
 const API_BASE_URL = rawBaseUrl.endsWith("/") ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
 
 let inMemoryAccessToken: string | null = null;
@@ -130,6 +133,8 @@ async function executeFetch<T>(url: string, options: RequestOptions, skipAuth: b
       fallbackMsg = "Backend URL is not configured. Please add VITE_API_BASE_URL in Vercel Environment Variables and Redeploy.";
     } else if (response.status === 404) {
       fallbackMsg = `API endpoint not found (404) at ${url}.`;
+    } else if (response.status === 502 || response.status === 503 || response.status === 504) {
+      fallbackMsg = "Backend server is waking up (Render cold start). Please wait 10-20 seconds and try again.";
     } else if (response.status >= 500) {
       fallbackMsg = `Backend server error (${response.status}) at ${url}. Check Render server logs.`;
     }

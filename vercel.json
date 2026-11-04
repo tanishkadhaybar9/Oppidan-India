@@ -3,7 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://erms-api-xp4w.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
-
