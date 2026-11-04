@@ -96,5 +96,19 @@ export class EmployeeController {
             next(error);
         }
     }
+    static async getHierarchy(req, res, next) {
+        try {
+            const companyId = req.user.companyId;
+            const result = await EmployeeService.getSupervisorsHierarchy(companyId);
+            res.status(200).json({
+                success: true,
+                message: "Supervisor hierarchy retrieved successfully",
+                data: result,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 //# sourceMappingURL=employee.controller.js.map

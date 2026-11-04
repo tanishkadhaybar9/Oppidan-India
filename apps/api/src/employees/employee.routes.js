@@ -6,6 +6,7 @@ import { Permission } from "../permissions/permissions.js";
 const router = Router();
 router.use(authenticate);
 router.get("/", requirePermission(Permission.EMPLOYEE_READ), EmployeeController.list);
+router.get("/supervisors/hierarchy", requirePermission(Permission.EMPLOYEE_READ), EmployeeController.getHierarchy);
 router.get("/:id", requirePermission(Permission.EMPLOYEE_READ), EmployeeController.getById);
 router.get("/:id/history", requirePermission(Permission.EMPLOYEE_HISTORY_READ), EmployeeController.getHistory);
 router.post("/", requirePermission(Permission.EMPLOYEE_CREATE), EmployeeController.create);

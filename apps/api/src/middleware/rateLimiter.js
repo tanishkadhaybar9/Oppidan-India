@@ -1,30 +1,40 @@
 import rateLimit from "express-rate-limit";
 /**
  * Strict rate limiter for sensitive authentication endpoints (Login & Register).
- * Allows 20 requests per 15 minutes per IP.
+ * Allows 30 requests per 15 minutes per IP.
  */
 export const authRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // limit each IP to 20 requests per windowMs
+    max: 30, // limit each IP to 30 requests per windowMs
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    message: {
-        success: false,
-        message: "Too many authentication attempts. Please try again after 15 minutes.",
+    skip: (req) => req.method === "OPTIONS",
+    handler: (req, res) => {
+        res.status(429).json({
+            success: false,
+            message: "Too many authentication attempts. Please try again after 15 minutes.",
+            retryAfter: 900,
+        });
     },
 });
 /**
  * General API rate limiter.
- * Allows 200 requests per 15 minutes per IP.
+ * Allows 1500 requests per 15 minutes per IP (~100 requests/minute),
+ * accommodating multi-tab navigation, dashboards, and background polls
+ * while safely preventing denial-of-service abuse.
  */
 export const generalRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 200,
+    max: 1500,
     standardHeaders: true,
     legacyHeaders: false,
-    message: {
-        success: false,
-        message: "Too many requests. Please slow down.",
+    skip: (req) => req.path === "/api/health" || req.path === "/health" || req.method === "OPTIONS",
+    handler: (req, res) => {
+        res.status(429).json({
+            success: false,
+            message: "Too many requests. Please slow down.",
+            retryAfter: 60,
+        });
     },
 });
 //# sourceMappingURL=rateLimiter.js.map

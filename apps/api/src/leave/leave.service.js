@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import { resolveEmployeeForUser } from "../utils/resolveEmployee.js";
 import { calculateLeaveDays, getAvailableBalance, checkLeaveOverlap, } from "./leaveCalculation.service.js";
 // ─── Notification helpers ─────────────────────────────────────────────────────
 async function createNotification(companyId, userId, title, message, type = "LEAVE_STATUS", link) {
@@ -313,10 +314,7 @@ export async function reviewLeaveRequest(companyId, requestId, actorId, actorRol
         throw { status: 409, message: `Leave request is already ${req.status.toLowerCase()}` };
     }
     // Find actor employee profile if one exists
-    const actorEmployee = await prisma.employee.findFirst({
-        where: { userId: actorId, companyId },
-        select: { id: true, departmentId: true },
-    });
+    const actorEmployee = await resolveEmployeeForUser(companyId, actorId);
     // 1. Employees cannot approve or reject
     if (actorRole === "EMPLOYEE") {
         throw { status: 403, message: "Employees are not authorized to approve leave requests" };

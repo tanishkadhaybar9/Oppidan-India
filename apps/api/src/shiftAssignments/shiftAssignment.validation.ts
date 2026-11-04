@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+const optionalUuid = z
+  .union([z.string().uuid(), z.literal("")])
+  .transform((val) => (val === "" ? undefined : val))
+  .optional();
+
 export const createShiftAssignmentSchema = z.object({
   employeeId: z.string().uuid("Invalid employee ID"),
   shiftId: z.string().uuid("Invalid shift ID"),
@@ -12,8 +17,8 @@ export const updateShiftAssignmentSchema = z.object({
 });
 
 export const listShiftAssignmentsQuerySchema = z.object({
-  employeeId: z.string().uuid().optional(),
-  shiftId: z.string().uuid().optional(),
+  employeeId: optionalUuid,
+  shiftId: optionalUuid,
 });
 
 export type CreateShiftAssignmentInput = z.infer<typeof createShiftAssignmentSchema>;

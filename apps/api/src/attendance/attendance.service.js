@@ -1,35 +1,13 @@
 import prisma from "../lib/prisma.js";
 import { AttendanceStatus, CorrectionStatus, EmploymentStatus } from "../generated/prisma/client.js";
 import { AttendanceCalculationService } from "./attendanceCalculation.service.js";
+import { resolveEmployeeForUser } from "../utils/resolveEmployee.js";
 export class AttendanceService {
     /**
      * Helper: Resolve Employee profile linked to a User.
      */
     static async resolveEmployeeForUser(companyId, userId) {
-        const user = await prisma.user.findFirst({
-            where: { id: userId, companyId },
-            include: { employee: true },
-        });
-        if (!user) {
-            const err = new Error("User account not found.");
-            err.statusCode = 404;
-            err.code = "NOT_FOUND";
-            throw err;
-        }
-        if (user.employee) {
-            return user.employee;
-        }
-        // Fallback: match by email within same company
-        const employee = await prisma.employee.findFirst({
-            where: { email: user.email, companyId },
-        });
-        if (!employee) {
-            const err = new Error("No employee profile found linked to this user account.");
-            err.statusCode = 404;
-            err.code = "NOT_FOUND";
-            throw err;
-        }
-        return employee;
+        return resolveEmployeeForUser(companyId, userId);
     }
     /**
      * Helper: Get company attendance settings or default.

@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { prisma } from "../lib/prisma.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, hashToken, } from "../utils/jwt.js";
-import { UserRole, UserStatus } from "../generated/prisma/client.js";
+import { UserRole, UserStatus, EmploymentStatus } from "../generated/prisma/client.js";
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 export class AuthService {
     /**
@@ -84,6 +84,18 @@ export class AuthService {
                     role: UserRole.OWNER,
                     status: UserStatus.ACTIVE,
                     companyId: createdCompany.id,
+                },
+            });
+            // Auto-provision initial Employee record for the owner
+            await tx.employee.create({
+                data: {
+                    companyId: createdCompany.id,
+                    userId: user.id,
+                    name: user.name,
+                    email: user.email,
+                    employeeCode: "EMP-0001",
+                    role: "OWNER",
+                    status: EmploymentStatus.ACTIVE,
                 },
             });
             return { createdUser: user, company: createdCompany };

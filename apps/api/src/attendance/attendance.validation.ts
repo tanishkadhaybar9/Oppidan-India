@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { AttendanceStatus, CorrectionStatus } from "../generated/prisma/client.js";
 
+const optionalUuid = z
+  .union([z.string().uuid(), z.literal("")])
+  .transform((val) => (val === "" ? undefined : val))
+  .optional();
+
 export const clockInSchema = z.object({
   // regular employees clock in automatically using their authenticated user session
   // notes or geolocation can optionally be included
@@ -12,17 +17,26 @@ export const clockOutSchema = z.object({
 });
 
 export const listDailyAttendanceQuerySchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional(),
-  departmentId: z.string().uuid().optional(),
-  shiftId: z.string().uuid().optional(),
-  status: z.nativeEnum(AttendanceStatus).optional(),
+  date: z
+    .union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"), z.literal("")])
+    .transform((val) => (val === "" ? undefined : val))
+    .optional(),
+  departmentId: optionalUuid,
+  shiftId: optionalUuid,
+  status: z
+    .union([z.nativeEnum(AttendanceStatus), z.literal(""), z.literal("ALL")])
+    .transform((val) => (val === "" || val === "ALL" ? undefined : val))
+    .optional(),
   search: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export const myAttendanceQuerySchema = z.object({
-  month: z.string().regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format").optional(),
+  month: z
+    .union([z.string().regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format"), z.literal("")])
+    .transform((val) => (val === "" ? undefined : val))
+    .optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(31),
 });
@@ -47,9 +61,9 @@ export const hrDirectCorrectionSchema = z.object({
 export const weeklyReportQuerySchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD"),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD"),
-  departmentId: z.string().uuid().optional(),
-  shiftId: z.string().uuid().optional(),
-  employeeId: z.string().uuid().optional(),
+  departmentId: optionalUuid,
+  shiftId: optionalUuid,
+  employeeId: optionalUuid,
 });
 
 export type ClockInInput = z.infer<typeof clockInSchema>;

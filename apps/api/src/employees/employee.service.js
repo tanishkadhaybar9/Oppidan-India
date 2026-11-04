@@ -105,9 +105,16 @@ export class EmployeeService {
             err.code = "CONFLICT";
             throw err;
         }
+        // Check if an active user exists with this email to link them
+        const linkedUser = await prisma.user.findFirst({
+            where: { email: input.email.trim().toLowerCase(), companyId },
+            select: { id: true, role: true },
+        });
         const employee = await prisma.employee.create({
             data: {
                 companyId,
+                userId: linkedUser?.id ?? null,
+                role: linkedUser?.role ? String(linkedUser.role) : "EMPLOYEE",
                 name: input.name,
                 email: input.email,
                 employeeCode: input.employeeCode,
@@ -145,6 +152,37 @@ export class EmployeeService {
             err.statusCode = 404;
             err.code = "NOT_FOUND";
             throw err;
+        }
+        if (input.supervisorId) {
+            if (input.supervisorId === employeeId) {
+                const err = new Error("An employee cannot be assigned as their own supervisor.");
+                err.statusCode = 400;
+                throw err;
+            }
+            const sup = await prisma.employee.findFirst({
+                where: { id: input.supervisorId, companyId, status: EmploymentStatus.ACTIVE },
+            });
+            if (!sup) {
+                const err = new Error("Selected supervisor was not found or is inactive.");
+                err.statusCode = 400;
+                throw err;
+            }
+            // Check for circular dependency: walk up the supervisor chain
+            let currentCheckId = input.supervisorId;
+            const visited = new Set([employeeId]);
+            while (currentCheckId) {
+                if (visited.has(currentCheckId)) {
+                    const err = new Error("Circular reporting hierarchy detected. An employee cannot report to their own direct or indirect subordinate.");
+                    err.statusCode = 400;
+                    throw err;
+                }
+                visited.add(currentCheckId);
+                const nextSup = await prisma.employee.findUnique({
+                    where: { id: currentCheckId },
+                    select: { supervisorId: true },
+                });
+                currentCheckId = nextSup?.supervisorId ?? null;
+            }
         }
         // Build history events for each changed field
         const historyEvents = [];
@@ -255,6 +293,46 @@ export class EmployeeService {
             },
         });
         return history;
+    }
+    /**
+     * Get supervisory hierarchy mapping for the company.
+     */
+    static async getSupervisorsHierarchy(companyId) {
+        const employees = await prisma.employee.findMany({
+            where: { companyId, status: EmploymentStatus.ACTIVE },
+            select: {
+                id: true,
+                employeeCode: true,
+                name: true,
+                email: true,
+                status: true,
+                department: { select: { id: true, name: true } },
+                designation: { select: { id: true, name: true } },
+                supervisorId: true,
+                supervisor: { select: { id: true, name: true, employeeCode: true } },
+                subordinates: {
+                    where: { status: EmploymentStatus.ACTIVE },
+                    select: {
+                        id: true,
+                        name: true,
+                        employeeCode: true,
+                        email: true,
+                        department: { select: { id: true, name: true } },
+                        designation: { select: { id: true, name: true } },
+                    },
+                },
+            },
+            orderBy: { name: "asc" },
+        });
+        const supervisors = employees.filter((e) => e.subordinates && e.subordinates.length > 0);
+        const unassigned = employees.filter((e) => !e.supervisorId);
+        return {
+            supervisors,
+            allEmployees: employees,
+            totalSupervisors: supervisors.length,
+            totalEmployees: employees.length,
+            unassignedCount: unassigned.length,
+        };
     }
 }
 //# sourceMappingURL=employee.service.js.map

@@ -177,18 +177,22 @@ export async function listAllBalances(req: Request, res: Response, next: NextFun
 
     if (user.role === "EMPLOYEE") {
       const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
-      where.employeeId = myEmp?.id || "none";
+      where.employeeId = myEmp.id;
     } else if (user.role === "SUPERVISOR") {
       const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
       const subEmps = await prisma.employee.findMany({
         where: { companyId: user.companyId, supervisorId: myEmp?.id },
         select: { id: true },
       });
-      const allowedIds = [myEmp?.id || "", ...subEmps.map((s) => s.id)].filter(Boolean);
+      const allowedIds = [myEmp?.id, ...subEmps.map((s) => s.id)].filter(Boolean) as string[];
       where.employeeId = { in: allowedIds };
     } else if (user.role === "MANAGER") {
       const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
-      where.employee = { departmentId: myEmp?.departmentId || departmentId || "none" };
+      if (myEmp?.departmentId) {
+        where.employee = { departmentId: myEmp.departmentId };
+      } else if (departmentId) {
+        where.employee = { departmentId };
+      }
     } else if (departmentId) {
       where.employee = { departmentId };
     }
@@ -251,7 +255,7 @@ export async function listLeaveRequests(req: Request, res: Response, next: NextF
 
     if (user.role === "EMPLOYEE") {
       const emp = await resolveEmployeeForUser(user.companyId, user.id, user);
-      employeeId = emp?.id || "none";
+      employeeId = emp.id;
     } else if (user.role === "SUPERVISOR") {
       const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
       const subEmps = await prisma.employee.findMany({
@@ -261,7 +265,7 @@ export async function listLeaveRequests(req: Request, res: Response, next: NextF
       employeeIds = [myEmp?.id || "", ...subEmps.map((s) => s.id)].filter(Boolean);
     } else if (user.role === "MANAGER") {
       const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
-      deptIdFilter = myEmp?.departmentId || "none";
+      deptIdFilter = myEmp?.departmentId || departmentId;
     }
 
     const data = await svc.listLeaveRequests(user.companyId, {

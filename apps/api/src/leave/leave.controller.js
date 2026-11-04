@@ -1,5 +1,6 @@
 import * as svc from "./leave.service.js";
 import { prisma } from "../lib/prisma.js";
+import { resolveEmployeeForUser } from "../utils/resolveEmployee.js";
 import { createLeaveTypeSchema, updateLeaveTypeSchema, createHolidaySchema, updateHolidaySchema, allocateBalanceSchema, createLeaveRequestSchema, reviewLeaveRequestSchema, cancelLeaveRequestSchema, } from "./leave.validation.js";
 function paramStr(param) {
     if (Array.isArray(param))
@@ -119,14 +120,7 @@ export async function allocateLeaveBalance(req, res, next) {
 export async function getMyLeaveBalances(req, res, next) {
     try {
         const user = req.user;
-        const employee = await prisma.employee.findFirst({
-            where: { userId: user.id, companyId: user.companyId },
-            select: { id: true },
-        });
-        if (!employee) {
-            res.status(404).json({ success: false, message: "Employee record not found for your account" });
-            return;
-        }
+        const employee = await resolveEmployeeForUser(user.companyId, user.id, user);
         const data = await svc.listLeaveBalances(user.companyId, employee.id);
         res.json({ success: true, data });
     }
@@ -140,20 +134,14 @@ export async function getEmployeeLeaveBalances(req, res, next) {
         const targetEmployeeId = paramStr(req.params.employeeId);
         // Permission and scope checks
         if (user.role === "EMPLOYEE") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             if (!myEmp || myEmp.id !== targetEmployeeId) {
                 res.status(403).json({ success: false, message: "Forbidden: You can only view your own leave balances" });
                 return;
             }
         }
         else if (user.role === "SUPERVISOR") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             if (myEmp && myEmp.id !== targetEmployeeId) {
                 const targetEmp = await prisma.employee.findFirst({
                     where: { id: targetEmployeeId, companyId: user.companyId },
@@ -166,10 +154,7 @@ export async function getEmployeeLeaveBalances(req, res, next) {
             }
         }
         else if (user.role === "MANAGER") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true, departmentId: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             if (myEmp && myEmp.id !== targetEmployeeId) {
                 const targetEmp = await prisma.employee.findFirst({
                     where: { id: targetEmployeeId, companyId: user.companyId },
@@ -196,17 +181,11 @@ export async function listAllBalances(req, res, next) {
         if (leaveTypeId)
             where.leaveTypeId = leaveTypeId;
         if (user.role === "EMPLOYEE") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             where.employeeId = myEmp?.id || "none";
         }
         else if (user.role === "SUPERVISOR") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             const subEmps = await prisma.employee.findMany({
                 where: { companyId: user.companyId, supervisorId: myEmp?.id },
                 select: { id: true },
@@ -215,10 +194,7 @@ export async function listAllBalances(req, res, next) {
             where.employeeId = { in: allowedIds };
         }
         else if (user.role === "MANAGER") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { departmentId: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             where.employee = { departmentId: myEmp?.departmentId || departmentId || "none" };
         }
         else if (departmentId) {
@@ -247,14 +223,7 @@ export async function createLeaveRequest(req, res, next) {
             return;
         }
         const user = req.user;
-        const employee = await prisma.employee.findFirst({
-            where: { userId: user.id, companyId: user.companyId },
-            select: { id: true },
-        });
-        if (!employee) {
-            res.status(404).json({ success: false, message: "Employee record not found for your account" });
-            return;
-        }
+        const employee = await resolveEmployeeForUser(user.companyId, user.id, user);
         const data = await svc.createLeaveRequest(user.companyId, employee.id, user.id, parsed.data);
         res.status(201).json({ success: true, data });
     }
@@ -265,14 +234,7 @@ export async function createLeaveRequest(req, res, next) {
 export async function getMyLeaveRequests(req, res, next) {
     try {
         const user = req.user;
-        const emp = await prisma.employee.findFirst({
-            where: { userId: user.id, companyId: user.companyId },
-            select: { id: true },
-        });
-        if (!emp) {
-            res.status(404).json({ success: false, message: "Employee record not found" });
-            return;
-        }
+        const emp = await resolveEmployeeForUser(user.companyId, user.id, user);
         const { status, startDate, endDate, leaveTypeId, page = "1", limit = "20" } = req.query;
         const data = await svc.listLeaveRequests(user.companyId, {
             employeeId: emp.id,
@@ -297,17 +259,11 @@ export async function listLeaveRequests(req, res, next) {
         let employeeIds;
         let deptIdFilter = departmentId;
         if (user.role === "EMPLOYEE") {
-            const emp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true },
-            });
+            const emp = await resolveEmployeeForUser(user.companyId, user.id, user);
             employeeId = emp?.id || "none";
         }
         else if (user.role === "SUPERVISOR") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             const subEmps = await prisma.employee.findMany({
                 where: { companyId: user.companyId, supervisorId: myEmp?.id },
                 select: { id: true },
@@ -315,10 +271,7 @@ export async function listLeaveRequests(req, res, next) {
             employeeIds = [myEmp?.id || "", ...subEmps.map((s) => s.id)].filter(Boolean);
         }
         else if (user.role === "MANAGER") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { departmentId: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             deptIdFilter = myEmp?.departmentId || "none";
         }
         const data = await svc.listLeaveRequests(user.companyId, {
@@ -346,30 +299,21 @@ export async function getLeaveRequest(req, res, next) {
         const data = await svc.getLeaveRequest(user.companyId, requestId);
         // Enforce role-based access to the individual leave record
         if (user.role === "EMPLOYEE") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             if (!myEmp || data.employee.id !== myEmp.id) {
                 res.status(403).json({ success: false, message: "Forbidden: You are not authorized to view another employee's leave request" });
                 return;
             }
         }
         else if (user.role === "SUPERVISOR") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             if (myEmp && data.employee.id !== myEmp.id && data.employee.supervisorId !== myEmp.id) {
                 res.status(403).json({ success: false, message: "Forbidden: You are not authorized to view this leave request" });
                 return;
             }
         }
         else if (user.role === "MANAGER") {
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true, departmentId: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             if (myEmp && data.employee.id !== myEmp.id && data.employee.departmentId !== myEmp.departmentId) {
                 res.status(403).json({ success: false, message: "Forbidden: You are not authorized to view leave requests from other departments" });
                 return;
@@ -389,10 +333,7 @@ export async function getApprovalsQueue(req, res, next) {
         let departmentId;
         if (user.role === "SUPERVISOR") {
             currentStage = "SUPERVISOR";
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { id: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             const subEmps = await prisma.employee.findMany({
                 where: { companyId: user.companyId, supervisorId: myEmp?.id },
                 select: { id: true },
@@ -401,15 +342,12 @@ export async function getApprovalsQueue(req, res, next) {
         }
         else if (user.role === "MANAGER") {
             currentStage = "MANAGER";
-            const myEmp = await prisma.employee.findFirst({
-                where: { userId: user.id, companyId: user.companyId },
-                select: { departmentId: true },
-            });
+            const myEmp = await resolveEmployeeForUser(user.companyId, user.id, user);
             departmentId = myEmp?.departmentId || undefined;
         }
         else if (user.role === "HR" || user.role === "OWNER") {
-            // HR / OWNER sees pending_hr or all pending
-            currentStage = "HR";
+            // HR / OWNER can see pending requests
+            currentStage = undefined;
         }
         else {
             res.status(403).json({ success: false, message: "Forbidden: You do not have approval permissions" });
