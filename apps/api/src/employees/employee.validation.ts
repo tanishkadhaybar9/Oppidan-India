@@ -1,14 +1,5 @@
 import { z } from "zod";
-
-const optionalUuid = z
-  .union([z.string().uuid(), z.literal("")])
-  .optional()
-  .transform((val) => (val === "" || val === undefined ? undefined : val));
-
-const nullableUuid = z
-  .union([z.string().uuid(), z.literal(""), z.null()])
-  .optional()
-  .transform((val) => (val === "" || val === null || val === undefined ? null : val));
+import { optionalUuid, nullableUuid } from "../utils/validation.js";
 
 export const createEmployeeSchema = z.object({
   name: z.string().min(2).max(120),

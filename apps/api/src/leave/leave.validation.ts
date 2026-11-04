@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "../utils/validation.js";
 
 export const createLeaveTypeSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(50),
@@ -29,8 +30,8 @@ export const updateHolidaySchema = createHolidaySchema.partial().extend({
 });
 
 export const allocateBalanceSchema = z.object({
-  employeeId: z.string().uuid("Valid employee ID required"),
-  leaveTypeId: z.string().uuid("Valid leave type ID required"),
+  employeeId: uuidSchema("Valid employee ID required"),
+  leaveTypeId: uuidSchema("Valid leave type ID required"),
   periodStart: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
   periodEnd: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
   allocatedDays: z.number().min(0, "Allocated days cannot be negative"),
@@ -39,7 +40,7 @@ export const allocateBalanceSchema = z.object({
 });
 
 export const createLeaveRequestSchema = z.object({
-  leaveTypeId: z.string().uuid("Valid leave type ID required"),
+  leaveTypeId: uuidSchema("Valid leave type ID required"),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be YYYY-MM-DD"),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be YYYY-MM-DD"),
   startHalfDay: z.boolean().default(false),

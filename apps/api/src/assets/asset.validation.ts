@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "../utils/validation.js";
 
 const assetCategoryEnum = z.enum([
   "LAPTOP",
@@ -92,7 +93,7 @@ export const listAssetsQuerySchema = z.object({
 });
 
 export const assignAssetSchema = z.object({
-  employeeId: z.string().uuid("Valid employee ID required"),
+  employeeId: uuidSchema("Valid employee ID required"),
   conditionAtAssignment: assetConditionEnum.optional(),
   notes: z.string().max(500).optional().nullable(),
 });
@@ -105,13 +106,13 @@ export const returnAssetSchema = z.object({
 });
 
 export const transferAssetSchema = z.object({
-  targetEmployeeId: z.string().uuid("Valid target employee ID required"),
+  targetEmployeeId: uuidSchema("Valid target employee ID required"),
   notes: z.string().max(500).optional().nullable(),
   conditionAtTransfer: assetConditionEnum.optional(),
 });
 
 export const createMaintenanceSchema = z.object({
-  assetId: z.string().uuid("Valid asset ID required"),
+  assetId: uuidSchema("Valid asset ID required"),
   issueDescription: z
     .string()
     .min(3, "Issue description must be at least 3 characters")

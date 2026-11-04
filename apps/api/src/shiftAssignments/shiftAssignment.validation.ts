@@ -1,13 +1,9 @@
 import { z } from "zod";
-
-const optionalUuid = z
-  .union([z.string().uuid(), z.literal("")])
-  .transform((val) => (val === "" ? undefined : val))
-  .optional();
+import { uuidSchema, optionalUuid } from "../utils/validation.js";
 
 export const createShiftAssignmentSchema = z.object({
-  employeeId: z.string().uuid("Invalid employee ID"),
-  shiftId: z.string().uuid("Invalid shift ID"),
+  employeeId: uuidSchema("Invalid employee ID"),
+  shiftId: uuidSchema("Invalid shift ID"),
   effectiveFrom: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
   effectiveTo: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional().nullable(),
 });

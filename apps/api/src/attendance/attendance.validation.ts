@@ -1,10 +1,6 @@
 import { z } from "zod";
 import { AttendanceStatus, CorrectionStatus } from "../generated/prisma/client.js";
-
-const optionalUuid = z
-  .union([z.string().uuid(), z.literal("")])
-  .transform((val) => (val === "" ? undefined : val))
-  .optional();
+import { optionalUuid } from "../utils/validation.js";
 
 export const clockInSchema = z.object({
   // regular employees clock in automatically using their authenticated user session
