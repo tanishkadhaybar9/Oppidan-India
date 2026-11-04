@@ -17,7 +17,7 @@ import type { LeaveRequest } from "../types/leave";
 export function LeaveApprovalsPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
-  const [filterStage, setFilterStage] = useState<string>("MINE");
+  const [filterStage, setFilterStage] = useState<string>("ALL_PENDING");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
