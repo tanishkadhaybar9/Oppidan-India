@@ -153,8 +153,10 @@ export const AssetMaintenancePage: React.FC = () => {
     setModalSubmitting(true);
     setModalError(null);
 
+    const ticketIdToUse = selectedTicket.id || selectedTicket.ticketNumber;
+
     try {
-      await updateMaintenance(selectedTicket.ticketNumber, {
+      const res = await updateMaintenance(ticketIdToUse, {
         status: updateStatus,
         resolutionNotes: resolutionNotes.trim() || undefined,
         assignedTechnician: technician.trim() || undefined,
@@ -162,7 +164,18 @@ export const AssetMaintenancePage: React.FC = () => {
       });
       setSelectedTicket(null);
       setSuccess(`Ticket ${selectedTicket.ticketNumber} updated successfully!`);
-      loadTickets();
+
+      // Update state in real-time immediately
+      if (res.data) {
+        setTickets((prev) =>
+          prev.map((t) =>
+            t.id === selectedTicket.id || t.ticketNumber === selectedTicket.ticketNumber
+              ? { ...t, ...res.data }
+              : t
+          )
+        );
+      }
+      await loadTickets();
     } catch (err: any) {
       setModalError(err?.message || "Failed to update ticket.");
     } finally {

@@ -793,7 +793,13 @@ export class AssetService {
   ) {
     return await prisma.$transaction(async (tx) => {
       const ticket = await tx.assetMaintenance.findFirst({
-        where: { id: ticketId, companyId },
+        where: {
+          companyId,
+          OR: [
+            { id: ticketId },
+            { ticketNumber: ticketId },
+          ],
+        },
         include: { asset: true },
       });
 
@@ -806,7 +812,7 @@ export class AssetService {
         input.status === MaintenanceStatus.CANCELLED;
 
       const updatedTicket = await tx.assetMaintenance.update({
-        where: { id: ticketId },
+        where: { id: ticket.id },
         data: {
           ...(input.status && { status: input.status }),
           ...(input.priority && { priority: input.priority }),
@@ -835,7 +841,7 @@ export class AssetService {
           where: {
             companyId,
             assetId: ticket.assetId,
-            id: { not: ticketId },
+            id: { not: ticket.id },
             status: { in: [MaintenanceStatus.OPEN, MaintenanceStatus.IN_PROGRESS, MaintenanceStatus.WAITING_PARTS] },
           },
         });
@@ -935,7 +941,13 @@ export class AssetService {
    */
   static async getMaintenanceTicket(companyId: string, ticketId: string) {
     const ticket = await prisma.assetMaintenance.findFirst({
-      where: { id: ticketId, companyId },
+      where: {
+        companyId,
+        OR: [
+          { id: ticketId },
+          { ticketNumber: ticketId },
+        ],
+      },
       include: {
         asset: true,
         createdBy: { select: { id: true, name: true, email: true } },
