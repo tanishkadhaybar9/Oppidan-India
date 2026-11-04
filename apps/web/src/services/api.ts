@@ -1,6 +1,7 @@
 import type { ApiResponse } from "../types/auth";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
+const API_BASE_URL = rawBaseUrl.endsWith("/") ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
 
 let inMemoryAccessToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;
@@ -106,10 +107,20 @@ async function executeFetch<T>(url: string, options: RequestOptions, skipAuth: b
     throw error;
   }
 
-  const data = (await response.json().catch(() => ({
-    success: response.ok,
-    message: response.statusText || "Network response was not JSON",
-  }))) as ApiResponse<T>;
+  const data = (await response.json().catch(() => {
+    let fallbackMsg = "Network response was not JSON";
+    if (response.status === 404) {
+      fallbackMsg = `API endpoint not found (404). Check if backend URL (${API_BASE_URL || "not configured"}) is running.`;
+    } else if (response.status >= 500) {
+      fallbackMsg = `Backend server error (${response.status}). The service may be starting up on Render or encountered an error.`;
+    } else if (response.statusText) {
+      fallbackMsg = response.statusText;
+    }
+    return {
+      success: response.ok,
+      message: fallbackMsg,
+    };
+  })) as ApiResponse<T>;
 
   if (!response.ok) {
     const error: ApiError = {
