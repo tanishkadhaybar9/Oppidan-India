@@ -12,6 +12,7 @@ import shiftAssignmentRoutes from "./shiftAssignments/shiftAssignment.routes.js"
 import attendanceRoutes from "./attendance/attendance.routes.js";
 import leaveRoutes from "./leave/leave.routes.js";
 import assetRoutes from "./assets/asset.routes.js";
+import taskRoutes from "./tasks/task.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { generalRateLimiter } from "./middleware/rateLimiter.js";
 
@@ -78,6 +79,7 @@ app.use("/api/shift-assignments", shiftAssignmentRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leave", leaveRoutes);
 app.use("/api/assets", assetRoutes);
+app.use("/api/tasks", taskRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

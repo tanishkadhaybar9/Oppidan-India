@@ -88,6 +88,10 @@ model Company {
   assets                 Asset[]
   assetAssignments       AssetAssignment[]
   assetMaintenances      AssetMaintenance[]
+
+  tasks                  Task[]
+  taskComments           TaskComment[]
+  taskActivities         TaskActivity[]
 }
 
 model Department {
@@ -97,6 +101,7 @@ model Department {
   companyId String
   company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   employees Employee[]
+  tasks     Task[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -156,6 +161,9 @@ model Employee {
   assignedAssets   Asset[]           @relation("CurrentAssetAssignments")
   assetAssignments AssetAssignment[] @relation("EmployeeAssetHistory")
 
+  assignedTasks    Task[]            @relation("AssignedTasks")
+  reviewedTasks    Task[]            @relation("ReviewedTasks")
+
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
@@ -211,6 +219,10 @@ model User {
   assetsAssigned             AssetAssignment[]  @relation("AssetAssignedBy")
   assetsReturned             AssetAssignment[]  @relation("AssetReturnedBy")
   maintenanceTicketsCreated  AssetMaintenance[] @relation("MaintenanceCreatedBy")
+
+  tasksCreated               Task[]             @relation("TasksCreatedBy")
+  taskComments               TaskComment[]
+  taskActivities             TaskActivity[]
 
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
@@ -705,4 +717,103 @@ model AssetMaintenance {
   @@index([status])
   @@index([priority])
 }
+
+// ─── Task Management (Week 6) ───────────────────────────────────────────────
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  TO_DO
+  IN_PROGRESS
+  UNDER_REVIEW
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+model Task {
+  id                 String          @id @default(uuid())
+  companyId          String
+  company            Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  taskCode           String
+  title              String
+  description        String?
+  category           String          @default("GENERAL")
+  priority           TaskPriority    @default(MEDIUM)
+  status             TaskStatus      @default(TO_DO)
+  progress           Int             @default(0)
+
+  startDate          DateTime?
+  dueDate            DateTime?
+  completedAt        DateTime?
+
+  departmentId       String?
+  department         Department?     @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  assignedEmployeeId String?
+  assignedEmployee   Employee?       @relation("AssignedTasks", fields: [assignedEmployeeId], references: [id], onDelete: SetNull)
+
+  createdById        String?
+  createdBy          User?           @relation("TasksCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  reviewerId         String?
+  reviewer           Employee?       @relation("ReviewedTasks", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  instructions       String?
+  reviewFeedback     String?
+
+  comments           TaskComment[]
+  activities         TaskActivity[]
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@unique([companyId, taskCode])
+  @@index([companyId])
+  @@index([assignedEmployeeId])
+  @@index([departmentId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+}
+
+model TaskComment {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taskId])
+  @@index([companyId])
+}
+
+model TaskActivity {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  action    String
+  details   String?
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorName String?
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@index([companyId])
+}
+
 

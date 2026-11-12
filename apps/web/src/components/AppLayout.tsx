@@ -212,6 +212,51 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    title: "Task Management",
+    items: [
+      {
+        label: "Task Dashboard",
+        path: "/tasks/dashboard",
+        icon: <LayoutDashboard className="w-4 h-4" />,
+      },
+      {
+        label: "My Tasks",
+        path: "/tasks/my",
+        icon: <CheckSquare className="w-4 h-4" />,
+      },
+      {
+        label: "All Tasks",
+        path: "/tasks/list",
+        icon: <Layers className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER", "SUPERVISOR"],
+      },
+      {
+        label: "Create Task",
+        path: "/tasks/new",
+        icon: <PlusCircle className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER", "SUPERVISOR"],
+      },
+      {
+        label: "Task Assignments",
+        path: "/tasks/assignments",
+        icon: <Users className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER", "SUPERVISOR"],
+      },
+      {
+        label: "Review Queue",
+        path: "/tasks/reviews",
+        icon: <UserCheck className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER", "SUPERVISOR"],
+      },
+      {
+        label: "Task Analytics",
+        path: "/tasks/analytics",
+        icon: <BarChart2 className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER", "SUPERVISOR"],
+      },
+    ],
+  },
+  {
     title: "Reports",
     items: [
       {

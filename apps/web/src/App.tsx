@@ -31,6 +31,15 @@ import { AssetDetailPage } from "./pages/AssetDetailPage";
 import { AssetFormPage } from "./pages/AssetFormPage";
 import { AssetMaintenancePage } from "./pages/AssetMaintenancePage";
 import { MyAssetsPage } from "./pages/MyAssetsPage";
+import { TaskDashboardPage } from "./pages/TaskDashboardPage";
+import { AllTasksPage } from "./pages/AllTasksPage";
+import { CreateTaskPage } from "./pages/CreateTaskPage";
+import { TaskDetailPage } from "./pages/TaskDetailPage";
+import { EditTaskPage } from "./pages/EditTaskPage";
+import { MyTasksPage } from "./pages/MyTasksPage";
+import { TaskAssignmentsPage } from "./pages/TaskAssignmentsPage";
+import { TaskReviewsPage } from "./pages/TaskReviewsPage";
+import { TaskAnalyticsPage } from "./pages/TaskAnalyticsPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AppLayout } from "./components/AppLayout";
 
@@ -339,6 +348,98 @@ function App() {
               <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
                 <AppLayout>
                   <AssetMaintenancePage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Task Management */}
+          <Route
+            path="/tasks/dashboard"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <TaskDashboardPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/my"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <MyTasksPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/list"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <AllTasksPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/new"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <CreateTaskPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/assignments"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <TaskAssignmentsPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/reviews"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <TaskReviewsPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/analytics"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <TaskAnalyticsPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/:id"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <TaskDetailPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/:id/edit"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <EditTaskPage />
                 </AppLayout>
               </ProtectedRoute>
             }
