@@ -40,6 +40,19 @@ import { MyTasksPage } from "./pages/MyTasksPage";
 import { TaskAssignmentsPage } from "./pages/TaskAssignmentsPage";
 import { TaskReviewsPage } from "./pages/TaskReviewsPage";
 import { TaskAnalyticsPage } from "./pages/TaskAnalyticsPage";
+import { PayrollDashboardPage } from "./pages/PayrollDashboardPage";
+import { SalaryStructuresPage } from "./pages/SalaryStructuresPage";
+import { CreateSalaryStructurePage } from "./pages/CreateSalaryStructurePage";
+import { ProcessPayrollPage } from "./pages/ProcessPayrollPage";
+import { PayrollHistoryPage } from "./pages/PayrollHistoryPage";
+import { PayslipPage } from "./pages/PayslipPage";
+import { ReportsDashboardPage } from "./pages/ReportsDashboardPage";
+import { EmployeeReportPage } from "./pages/EmployeeReportPage";
+import { AttendanceReportPage } from "./pages/AttendanceReportPage";
+import { LeaveReportPage } from "./pages/LeaveReportPage";
+import { AssetReportPage } from "./pages/AssetReportPage";
+import { PayrollReportPage } from "./pages/PayrollReportPage";
+import { TaskReportPage } from "./pages/TaskReportPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AppLayout } from "./components/AppLayout";
 
@@ -440,6 +453,140 @@ function App() {
               <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
                 <AppLayout>
                   <EditTaskPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Payroll Management */}
+          <Route
+            path="/payroll/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <PayrollDashboardPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll/salary-structures"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR"]}>
+                <AppLayout>
+                  <SalaryStructuresPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll/salary-structures/create"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR"]}>
+                <AppLayout>
+                  <CreateSalaryStructurePage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll/process"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR"]}>
+                <AppLayout>
+                  <ProcessPayrollPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll/history"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER"]}>
+                <AppLayout>
+                  <PayrollHistoryPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll/my-payslips"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <PayslipPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Reports Management */}
+          <Route
+            path="/reports/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <ReportsDashboardPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/employees"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER"]}>
+                <AppLayout>
+                  <EmployeeReportPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/attendance"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <AttendanceReportPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/leaves"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <LeaveReportPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/assets"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER"]}>
+                <AppLayout>
+                  <AssetReportPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/payroll"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR"]}>
+                <AppLayout>
+                  <PayrollReportPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/tasks"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
+                <AppLayout>
+                  <TaskReportPage />
                 </AppLayout>
               </ProtectedRoute>
             }

@@ -13,6 +13,8 @@ import attendanceRoutes from "./attendance/attendance.routes.js";
 import leaveRoutes from "./leave/leave.routes.js";
 import assetRoutes from "./assets/asset.routes.js";
 import taskRoutes from "./tasks/task.routes.js";
+import payrollRoutes from "./payroll/payroll.routes.js";
+import reportRoutes from "./reports/reports.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { generalRateLimiter } from "./middleware/rateLimiter.js";
 
@@ -80,6 +82,8 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leave", leaveRoutes);
 app.use("/api/assets", assetRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/payroll", payrollRoutes);
+app.use("/api/reports", reportRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

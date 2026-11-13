@@ -28,6 +28,10 @@ import {
   Package,
   Wrench,
   Monitor,
+  DollarSign,
+  Receipt,
+  FileSpreadsheet,
+  CreditCard,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { NotificationBell } from "./NotificationBell";
@@ -257,12 +261,82 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: "Reports",
+    title: "Payroll",
     items: [
       {
-        label: "Reports & Analytics",
-        path: "/reports",
+        label: "Payroll Dashboard",
+        path: "/payroll/dashboard",
+        icon: <DollarSign className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER", "SUPERVISOR"],
+      },
+      {
+        label: "Salary Structures",
+        path: "/payroll/salary-structures",
+        icon: <FileSpreadsheet className="w-4 h-4" />,
+        roles: ["OWNER", "HR"],
+      },
+      {
+        label: "Process Payroll",
+        path: "/payroll/process",
+        icon: <Receipt className="w-4 h-4" />,
+        roles: ["OWNER", "HR"],
+      },
+      {
+        label: "Payroll History",
+        path: "/payroll/history",
+        icon: <FileText className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER"],
+      },
+      {
+        label: "My Payslips",
+        path: "/payroll/my-payslips",
+        icon: <CreditCard className="w-4 h-4" />,
+      },
+    ],
+  },
+  {
+    title: "Reports & Analytics",
+    items: [
+      {
+        label: "Reports Hub",
+        path: "/reports/dashboard",
         icon: <BarChart2 className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER", "SUPERVISOR"],
+      },
+      {
+        label: "Employee Reports",
+        path: "/reports/employees",
+        icon: <Users className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER"],
+      },
+      {
+        label: "Attendance Reports",
+        path: "/reports/attendance",
+        icon: <CalendarCheck className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER", "SUPERVISOR"],
+      },
+      {
+        label: "Leave Reports",
+        path: "/reports/leaves",
+        icon: <Umbrella className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER", "SUPERVISOR"],
+      },
+      {
+        label: "Asset Reports",
+        path: "/reports/assets",
+        icon: <Package className="w-4 h-4" />,
+        roles: ["OWNER", "HR", "MANAGER"],
+      },
+      {
+        label: "Payroll Reports",
+        path: "/reports/payroll",
+        icon: <DollarSign className="w-4 h-4" />,
+        roles: ["OWNER", "HR"],
+      },
+      {
+        label: "Task Reports",
+        path: "/reports/tasks",
+        icon: <CheckSquare className="w-4 h-4" />,
         roles: ["OWNER", "HR", "MANAGER", "SUPERVISOR"],
       },
     ],
