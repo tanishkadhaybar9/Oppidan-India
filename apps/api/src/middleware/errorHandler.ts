@@ -1,5 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+import { recordTrackedError } from "../utils/errorTracker.js";
+import { logger } from "../utils/logger.js";
 
 interface CustomHttpError extends Error {
   statusCode?: number;
@@ -13,7 +15,7 @@ interface CustomHttpError extends Error {
  */
 export function errorHandler(
   err: CustomHttpError,
-  _req: Request,
+  req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction
@@ -29,9 +31,18 @@ export function errorHandler(
       formattedErrors[path].push(issue.message);
     }
 
+    const message = err.issues[0]?.message || "Validation failed";
+    recordTrackedError({
+      method: req.method,
+      path: req.originalUrl,
+      statusCode: 400,
+      message,
+      code: "VALIDATION_ERROR",
+    });
+
     res.status(400).json({
       success: false,
-      message: err.issues[0]?.message || "Validation failed",
+      message,
       errors: formattedErrors,
     });
     return;
@@ -53,6 +64,21 @@ export function errorHandler(
     statusCode === 500 && isProduction
       ? "An unexpected internal server error occurred"
       : err.message || "Internal server error";
+
+  // Record in error tracking ring buffer
+  recordTrackedError({
+    method: req.method,
+    path: req.originalUrl,
+    statusCode,
+    message: err.message || message,
+    code: String(err.code || `HTTP_${statusCode}`),
+  });
+
+  if (statusCode >= 500) {
+    logger.error(`[SERVER_ERROR] ${req.method} ${req.originalUrl}: ${err.message}`, {
+      stack: err.stack,
+    });
+  }
 
   res.status(statusCode).json({
     success: false,

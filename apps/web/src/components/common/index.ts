@@ -9,3 +9,4 @@ export type { EmptyStateProps } from "./EmptyState";
 export { ErrorState } from "./ErrorState";
 export type { ErrorStateProps } from "./ErrorState";
 export { TableSkeleton, CardSkeleton } from "./LoadingSkeleton";
+export { ErrorBoundary } from "./ErrorBoundary";

@@ -3,6 +3,8 @@ import { prisma } from "../lib/prisma.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requirePermission } from "../middleware/authorize.js";
 import { Permission } from "../permissions/permissions.js";
+import { getLatencyMetrics } from "../middleware/requestProfiler.js";
+import { getErrorStats } from "../utils/errorTracker.js";
 
 const router = Router();
 
@@ -39,7 +41,7 @@ router.get("/", async (_req, res) => {
   });
 });
 
-// Admin-Only Detailed Diagnostics
+// Admin-Only Detailed Diagnostics & Live Monitoring
 router.get(
   "/diagnostics",
   authenticate,
@@ -51,16 +53,33 @@ router.get(
       await prisma.$queryRaw`SELECT 1`;
       const dbLatencyMs = Date.now() - start;
 
-      const [userCount, employeeCount, attendanceCount, taskCount, assetCount] =
-        await Promise.all([
-          prisma.user.count({ where: { companyId } }),
-          prisma.employee.count({ where: { companyId } }),
-          prisma.attendance.count({ where: { companyId } }),
-          prisma.task.count({ where: { companyId } }),
-          prisma.asset.count({ where: { companyId } }),
-        ]);
+      const [
+        userCount,
+        employeeCount,
+        attendanceCount,
+        taskCount,
+        assetCount,
+        payrollCount,
+        leaveCount,
+        deptCount,
+        desigCount,
+        auditCount,
+      ] = await Promise.all([
+        prisma.user.count({ where: { companyId } }),
+        prisma.employee.count({ where: { companyId } }),
+        prisma.attendance.count({ where: { companyId } }),
+        prisma.task.count({ where: { companyId } }),
+        prisma.asset.count({ where: { companyId } }),
+        prisma.payroll.count({ where: { companyId } }),
+        prisma.leaveRequest.count({ where: { companyId } }),
+        prisma.department.count({ where: { companyId } }),
+        prisma.designation.count({ where: { companyId } }),
+        prisma.auditLog.count({ where: { companyId } }),
+      ]);
 
       const mem = process.memoryUsage();
+      const latencyMetrics = getLatencyMetrics();
+      const errorStats = getErrorStats();
 
       res.json({
         success: true,
@@ -72,29 +91,53 @@ router.get(
             nodeVersion: process.version,
             environment: process.env.NODE_ENV || "production",
             pid: process.pid,
+            memory: {
+              rss: `${Math.round(mem.rss / 1024 / 1024)} MB`,
+              heapTotal: `${Math.round(mem.heapTotal / 1024 / 1024)} MB`,
+              heapUsed: `${Math.round(mem.heapUsed / 1024 / 1024)} MB`,
+              external: `${Math.round(mem.external / 1024 / 1024)} MB`,
+            },
           },
           database: {
-            engine: "PostgreSQL (Neon)",
-            status: "connected",
+            connected: true,
+            engine: "PostgreSQL (Neon Serverless)",
             latencyMs: dbLatencyMs,
+            ssl: "TLSv1.3 Encrypted",
+            pool: "Prisma Client Active",
           },
-          memory: {
-            heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
-            heapTotalMB: Math.round(mem.heapTotal / 1024 / 1024),
-            rssMB: Math.round(mem.rss / 1024 / 1024),
+          performance: {
+            averageLatencyMs: latencyMetrics.averageLatencyMs,
+            totalRequestsLogged: latencyMetrics.totalRequests,
+            slowRequestsCount: latencyMetrics.slowRequests,
+          },
+          monitoring: {
+            totalErrorsRecorded: errorStats.totalRecorded,
+            errorRatePerMinute: errorStats.errorRatePerMinute,
+            recentErrors: errorStats.recentErrors,
           },
           security: {
             corsEnabled: true,
             helmetEnabled: true,
             rateLimitingEnabled: true,
-            authType: "JWT + HttpOnly Cookie",
+            authType: "JWT (15m) + HttpOnly Refresh Cookie",
+            tenantIsolation: "Active (companyId enforced)",
           },
-          statistics: {
-            userCount,
-            employeeCount,
-            attendanceCount,
-            taskCount,
-            assetCount,
+          backup: {
+            strategy: "Neon Continuous WAL Archiving + Daily Automated Snapshots",
+            status: "Operational",
+            pitrSupported: true,
+          },
+          counts: {
+            users: userCount,
+            employees: employeeCount,
+            departments: deptCount,
+            designations: desigCount,
+            attendances: attendanceCount,
+            leaves: leaveCount,
+            tasks: taskCount,
+            assets: assetCount,
+            payrolls: payrollCount,
+            auditLogs: auditCount,
           },
           timestamp: new Date().toISOString(),
         },

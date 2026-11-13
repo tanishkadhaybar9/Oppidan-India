@@ -22,6 +22,7 @@ import userRoutes from "./users/user.routes.js";
 import healthRoutes from "./health/health.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { generalRateLimiter } from "./middleware/rateLimiter.js";
+import { requestProfiler } from "./middleware/requestProfiler.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -56,6 +57,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
+
+// Request profiler and latency tracker
+app.use(requestProfiler);
 
 // General request rate limiter
 app.use(generalRateLimiter);

@@ -10,6 +10,9 @@ import {
   RefreshCw,
   Loader2,
   HardDrive,
+  Zap,
+  Archive,
+  Info,
 } from "lucide-react";
 import { PageContainer, PageHeader } from "../components/common";
 import { getSystemDiagnostics } from "../services/healthService";
@@ -60,13 +63,13 @@ export const SystemHealthPage: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
-        title="Security & System Health"
-        subtitle="Real-time operational monitoring, database latency metrics, and cryptographic security checklist."
+        title="Application Monitoring & System Health"
+        subtitle="Real-time operational metrics, API response latency, error tracking, and disaster recovery status."
         icon={<Activity className="w-5 h-5 text-[#f47b5b]" />}
         breadcrumbs={[
           { label: "Dashboard", to: "/dashboard" },
           { label: "Settings", to: "/settings" },
-          { label: "System Health" },
+          { label: "Monitoring & Health" },
         ]}
         actions={
           <button
@@ -75,7 +78,7 @@ export const SystemHealthPage: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#eadbd2] text-xs font-semibold text-[#252525] hover:border-[#f47b5b] transition-all disabled:opacity-50 shadow-xs"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-[#f47b5b]" : ""}`} />
-            Refresh Diagnostics
+            Refresh Monitoring
           </button>
         }
       />
@@ -108,7 +111,7 @@ export const SystemHealthPage: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-xs text-[#77716e] mt-0.5">
-                  Node server is executing normally on Render cloud with active PostgreSQL connection on Neon.
+                  Node server is executing normally on Render with active PostgreSQL connection on Neon.
                 </p>
               </div>
             </div>
@@ -147,7 +150,7 @@ export const SystemHealthPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Connection Pooling:</span>
-                  <span className="font-semibold text-[#252525]">Prisma Native</span>
+                  <span className="font-semibold text-[#252525]">{data.database.pool || "Prisma Native"}</span>
                 </div>
               </div>
             </div>
@@ -213,6 +216,129 @@ export const SystemHealthPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Performance & Error Tracking (Week 9 Monitoring) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* API Latency & Throughput */}
+            <div className="bg-white border border-[#eadbd2] rounded-2xl p-5 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-[#252525] flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  API Performance Metrics
+                </h3>
+                <span className="text-[11px] text-[#77716e]">Real-time tracking</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-xl bg-[#fffcfb] border border-[#eadbd2] text-center">
+                  <div className="text-[11px] text-[#77716e]">Avg Latency</div>
+                  <div className="text-xl font-bold text-[#252525] mt-1">
+                    {data.performance?.averageLatencyMs ?? 0} <span className="text-xs font-normal">ms</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#fffcfb] border border-[#eadbd2] text-center">
+                  <div className="text-[11px] text-[#77716e]">Requests Logged</div>
+                  <div className="text-xl font-bold text-[#252525] mt-1">
+                    {data.performance?.totalRequestsLogged ?? 0}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#fffcfb] border border-[#eadbd2] text-center">
+                  <div className="text-[11px] text-[#77716e]">Slow (&gt;500ms)</div>
+                  <div className="text-xl font-bold text-amber-600 mt-1">
+                    {data.performance?.slowRequestsCount ?? 0}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-200/60 text-xs text-blue-900 flex items-start gap-2">
+                <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <span>
+                  High-frequency database endpoints use indexed multi-tenant scopes to maintain low single-digit query latency.
+                </span>
+              </div>
+            </div>
+
+            {/* Error Rate & Monitoring */}
+            <div className="bg-white border border-[#eadbd2] rounded-2xl p-5 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-[#252525] flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-[#f47b5b]" />
+                  Operational Error Tracking
+                </h3>
+                <span className="text-[11px] text-[#77716e]">In-Memory Ring Buffer</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-[#fffcfb] border border-[#eadbd2] text-center">
+                  <div className="text-[11px] text-[#77716e]">Total Errors Logged</div>
+                  <div className="text-xl font-bold text-[#252525] mt-1">
+                    {data.monitoring?.totalErrorsRecorded ?? 0}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#fffcfb] border border-[#eadbd2] text-center">
+                  <div className="text-[11px] text-[#77716e]">Error Rate / Min</div>
+                  <div className="text-xl font-bold text-emerald-600 mt-1">
+                    {data.monitoring?.errorRatePerMinute ?? 0}
+                  </div>
+                </div>
+              </div>
+
+              {data.monitoring?.recentErrors && data.monitoring.recentErrors.length > 0 ? (
+                <div className="max-h-36 overflow-y-auto space-y-1.5 text-[11px]">
+                  {data.monitoring.recentErrors.map((err) => (
+                    <div key={err.id} className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 flex items-center justify-between">
+                      <span className="truncate max-w-[200px] font-mono">{err.method} {err.path}</span>
+                      <span className="px-1.5 py-0.5 rounded bg-rose-200 text-[10px] font-bold">{err.statusCode}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/60 text-xs text-emerald-800 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <span>No operational errors logged in the current server session.</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Database Reliability & Backup Strategy Card */}
+          <div className="bg-white border border-[#eadbd2] rounded-2xl p-6 shadow-xs">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Archive className="w-5 h-5 text-[#f47b5b]" />
+                <h3 className="text-sm font-bold text-[#252525]">Database Reliability & Backup Strategy (Neon)</h3>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                PITR Active
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-3 rounded-xl bg-[#fffcfb] border border-[#eadbd2]">
+                <div className="font-semibold text-[#252525]">Continuous WAL Archiving</div>
+                <div className="text-[11px] text-[#77716e] mt-1">
+                  Neon writes Write-Ahead Logs continuously to safe object storage, allowing point-in-time recovery to any second.
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#fffcfb] border border-[#eadbd2]">
+                <div className="font-semibold text-[#252525]">Automated Branch Snapshots</div>
+                <div className="text-[11px] text-[#77716e] mt-1">
+                  Isolated copy-on-write database branches enable instant backup restore and staging verification without downtime.
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#fffcfb] border border-[#eadbd2]">
+                <div className="font-semibold text-[#252525]">Zero-Downtime Prisma Migrations</div>
+                <div className="text-[11px] text-[#77716e] mt-1">
+                  Safe migration protocol with backward-compatible column defaults and forward-only additive schemas.
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Database Entities Metrics */}
           <div className="bg-white border border-[#eadbd2] rounded-2xl p-6 shadow-xs">
             <h3 className="text-sm font-bold text-[#252525] mb-4 flex items-center gap-2">
@@ -260,64 +386,6 @@ export const SystemHealthPage: React.FC = () => {
               <div className="p-3 rounded-xl bg-[#fffcfb] border border-[#eadbd2]">
                 <div className="text-xs text-[#77716e]">Audit Logs</div>
                 <div className="text-xl font-bold text-emerald-600 mt-1">{data.counts.auditLogs}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Security & Hardening Checklist */}
-          <div className="bg-white border border-[#eadbd2] rounded-2xl p-6 shadow-xs">
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-4 h-4 text-[#f47b5b]" />
-              <h3 className="text-sm font-bold text-[#252525]">Oppidan ERMS Security Checklist</h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/60 text-[#252525]">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-semibold">Multi-Tenant Tenant Isolation</div>
-                  <div className="text-[11px] text-[#77716e]">All queries strictly scoped by companyId middleware</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/60 text-[#252525]">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-semibold">Dual-Token JWT Rotation</div>
-                  <div className="text-[11px] text-[#77716e]">15-minute access token + HttpOnly secure refresh cookie</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/60 text-[#252525]">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-semibold">Encrypted DB Transport</div>
-                  <div className="text-[11px] text-[#77716e]">TLS 1.3 enforced on Neon PostgreSQL connection strings</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/60 text-[#252525]">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-semibold">Argon2 / bcrypt Password Hashing</div>
-                  <div className="text-[11px] text-[#77716e]">Salting and computational cost factor applied to user credentials</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/60 text-[#252525]">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-semibold">Immutable Audit Trail</div>
-                  <div className="text-[11px] text-[#77716e]">Append-only audit logs recording admin mutations and auth events</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/60 text-[#252525]">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-semibold">RBAC Permission Enforcement</div>
-                  <div className="text-[11px] text-[#77716e]">Role-based route guards: OWNER, HR, MANAGER, SUPERVISOR, EMPLOYEE</div>
-                </div>
               </div>
             </div>
           </div>

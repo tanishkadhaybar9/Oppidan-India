@@ -2,14 +2,18 @@ import { apiClient } from "./api";
 import type { ApiResponse } from "../types/auth";
 
 export interface DiagnosticsData {
-  status: string;
+  status?: string;
   timestamp: string;
   database: {
     connected: boolean;
     latencyMs: number;
+    engine?: string;
+    ssl?: string;
+    pool?: string;
     error?: string | null;
   };
   server: {
+    status?: string;
     uptimeSeconds: number;
     nodeVersion: string;
     platform: string;
@@ -20,6 +24,29 @@ export interface DiagnosticsData {
       heapUsed: string;
       external: string;
     };
+  };
+  performance?: {
+    averageLatencyMs: number;
+    totalRequestsLogged: number;
+    slowRequestsCount: number;
+  };
+  monitoring?: {
+    totalErrorsRecorded: number;
+    errorRatePerMinute: number;
+    recentErrors: Array<{
+      id: string;
+      timestamp: string;
+      method?: string;
+      path?: string;
+      statusCode: number;
+      message: string;
+      code?: string;
+    }>;
+  };
+  backup?: {
+    strategy: string;
+    status: string;
+    pitrSupported: boolean;
   };
   counts: {
     users: number;

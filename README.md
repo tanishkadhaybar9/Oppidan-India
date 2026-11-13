@@ -13,14 +13,17 @@ A production-grade, multi-tenant Employee and Resource Management System (ERMS) 
 | Layer | Technologies |
 |---|---|
 | **Frontend** | React 19, TypeScript, Vite, Tailwind CSS v4, Lucide React, React Router v7 |
+| **Frontend Architecture** | Route-level code splitting (`React.lazy`), React `ErrorBoundary`, debounced search |
 | **Backend** | Node.js, Express.js, TypeScript, RESTful API architecture |
+| **Performance & Logging** | Structured sanitized logger, request latency profiler, error tracking ring buffer |
 | **Database & ORM** | PostgreSQL (Neon Serverless with TLS 1.3), Prisma ORM 6.19.3 |
+| **Backup & Recovery** | Neon Continuous WAL Archiving, Point-in-Time Recovery (PITR), Copy-on-Write branching |
 | **Authentication** | Dual-Token JWT (15-min access token + HttpOnly secure cookie refresh), Argon2/bcrypt |
 | **Deployment** | Vercel (SPA Frontend with rewrite routing), Render (API Web Service), Neon (Database) |
 
 ---
 
-## 📦 Complete 8-Week Implementation Roadmap
+## 📦 Complete 9-Week Implementation Roadmap
 
 ### Week 1 — Foundation & Multi-Tenant Authentication
 - Multi-tenant tenant isolation scoped by `companyId` on all database models and routes.
@@ -30,7 +33,7 @@ A production-grade, multi-tenant Employee and Resource Management System (ERMS) 
 ### Week 2 — Employee Management & Organizational Hierarchy
 - Comprehensive Employee Directory with employee code generation, filtering, and search.
 - Department and Designation structure management.
-- Multi-tier supervisor mappings and reporting lines.
+- Multi-tier supervisor mappings, circular hierarchy prevention, and reporting lines.
 
 ### Week 3 — Attendance & Shift Management
 - Real-time Clock-In / Clock-Out punch system with IP and location capture.
@@ -61,33 +64,21 @@ A production-grade, multi-tenant Employee and Resource Management System (ERMS) 
 - Printable, professional payslips downloadable per employee.
 - Comprehensive Reports Hub with export options (CSV, Excel) for Employees, Attendance, Leaves, Assets, Payroll, and Tasks.
 
-### Week 8 — System Administration, Notifications, Audit Logs & System Health
-- **Organization Settings**:
-  - Company Profile (Name, logo, email, phone, website, street address, postal code).
-  - Working Hours (Standard operating days, shift start/end times).
-  - Attendance Policy (Grace period, break allowance, overtime thresholds, remote punch policy, GPS requirements).
-  - Leave Policy (Fiscal year start, carry-forward rollover rules, medical proof thresholds).
-  - System Preferences (Timezone, date format, time format, default currency).
-- **Notification Management**:
-  - Notification bell in top header with real-time unread badge counter.
-  - Quick notification dropdown and comprehensive `/notifications` page.
-  - Multi-category event routing (`EMPLOYEE`, `LEAVE`, `ATTENDANCE`, `TASK`, `PAYROLL`, `ASSET`, `SYSTEM`).
-  - Read/unread filtering, mark all as read, and delete actions.
-- **Audit Logs & Activity Tracking**:
-  - Append-only security audit trail recording all administrative mutations, approvals, and logins.
-  - Search and filter by module, action, date range, and actor.
-  - Expandable JSON metadata inspector for detailed request payloads and IP addresses.
-  - Summary KPI cards with 24-hour activity velocities and active modules.
-- **User & Access Control**:
-  - User management interface with role assignment and account activation/deactivation.
-  - User creation modal with optional linkage to Employee records.
-  - Password reset capabilities and account protection safeguards.
-  - Interactive RBAC Permission Matrix inspector.
-- **Security & System Health**:
-  - Real-time diagnostic probes (`/api/health/diagnostics`).
-  - Database roundtrip latency measurement (ms) via Prisma on Neon.
-  - Continuous server uptime counter and V8 memory heap utilization gauges.
-  - Security checklist verification for tenant isolation, JWT rotation, and TLS encryption.
+### Week 8 — System Administration, Notifications & Audit Logs
+- **Organization Settings**: Company Profile, Working Hours, Attendance Rules, Leave Policies, and System Preferences.
+- **Notification Management**: Header notification bell, unread badge counter, notification center, and multi-category event routing.
+- **Audit Logs & Activity Tracking**: Append-only security audit trail recording all administrative mutations, approvals, and logins.
+- **User & Access Control**: User management interface with role assignment and account activation/deactivation.
+
+### Week 9 — Performance Optimization, Backup, Recovery & Monitoring
+- **Frontend Code Splitting**: Converted all 25+ application routes to dynamic `React.lazy` imports, dropping initial bundle size from 1.07 MB down to 59 kB.
+- **React Error Boundary**: Implemented global `ErrorBoundary` component preventing blank white screens during unexpected runtime failures.
+- **Backend Latency Profiler**: Express middleware measuring request duration, logging slow queries (>500ms), and calculating rolling latency averages.
+- **Sanitized Structured Logger**: Sensitive credentials (passwords, tokens, cookies) are automatically redacted from server logs.
+- **In-Memory Error Tracker**: Ring buffer tracking the last 50 operational errors and real-time error rates per minute.
+- **Live System Health & Monitoring**: Admin UI displaying real-time database roundtrip latency, memory utilization, and Neon backup/PITR status.
+- **Disaster Recovery Strategy**: Official [Backup and Recovery Documentation](docs/BACKUP_AND_RECOVERY.md) defining Point-in-Time Recovery and copy-on-write branching protocols.
+- **Quality Assurance**: Complete [Test Report & Verification Matrix](docs/TEST_REPORT.md) with 48/48 functional and UI tests passing.
 
 ---
 
@@ -98,7 +89,7 @@ A production-grade, multi-tenant Employee and Resource Management System (ERMS) 
 | Organization Settings Edit | ✅ | ✅ | ❌ | ❌ | ❌ |
 | User & Role Management | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Audit Logs Inspection | ✅ | ✅ | ❌ | ❌ | ❌ |
-| System Health Diagnostics | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Monitoring & Diagnostics | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Employee Master Management | ✅ | ✅ | View Only | View Only | Self Only |
 | Department / Designation Setup | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Attendance Correction Approval | ✅ | ✅ | ❌ | ❌ | ❌ |
@@ -109,50 +100,32 @@ A production-grade, multi-tenant Employee and Resource Management System (ERMS) 
 
 ---
 
-## 🔌 API Endpoints Summary
+## 🎬 Professional Demonstration Walkthrough
 
-### Authentication & Users
-- `POST /api/auth/register` — Register new company workspace and owner account
-- `POST /api/auth/login` — Authenticate and receive access token + refresh cookie
-- `POST /api/auth/refresh` — Rotate access token via HttpOnly refresh cookie
-- `GET /api/auth/me` — Current authenticated user profile
-- `GET /api/users` — List company users with search and role filters
-- `POST /api/users` — Provision new user account
-- `PATCH /api/users/:id` — Update user details or role
-- `PATCH /api/users/:id/status` — Toggle active / inactive status
-- `GET /api/users/roles/matrix` — Fetch RBAC permissions matrix
+For demonstration purposes, verify workflows using these role-based flows:
 
-### Organization Settings (Week 8)
-- `GET /api/settings` — Get complete organization settings
-- `PATCH /api/settings/organization` — Update company profile & contact info
-- `PATCH /api/settings/working-hours` — Configure working days and shift times
-- `PATCH /api/settings/attendance` — Update attendance rules, grace period, and thresholds
-- `PATCH /api/settings/leave` — Update leave rollover policies and rules
-- `PATCH /api/settings/preferences` — Update timezone, currency, and date formats
+### 1. Executive & HR Workflow (`OWNER` or `HR`)
+1. **Login**: Navigate to `/login` and sign in.
+2. **Dashboard Overview**: Inspect organizational KPI summary cards, employee headcount, and attendance summaries.
+3. **Administration & Monitoring**:
+   - Navigate to `/settings/health` to view live API latency benchmarks, server uptime, and Neon database connection health.
+   - Navigate to `/settings/organization` to inspect company profile, working hours, and attendance policy settings.
+   - Navigate to `/settings/audit-logs` to inspect the append-only activity trail with expandable JSON metadata.
+4. **Payroll Processing**: Navigate to `/payroll/dashboard` -> `/payroll/process` to review automated salary calculations and batch payroll runs.
 
-### Notifications (Week 8)
-- `GET /api/notifications` — List paginated notifications with filters
-- `GET /api/notifications/unread-count` — Quick count of unread items
-- `PATCH /api/notifications/:id/read` — Mark notification as read
-- `PATCH /api/notifications/mark-all-read` — Mark all notifications as read
-- `DELETE /api/notifications/:id` — Remove notification
+### 2. Departmental Management Workflow (`MANAGER` or `SUPERVISOR`)
+1. **Attendance Oversight**: Navigate to `/attendance` to review clock-in statuses and approve missed punch corrections.
+2. **Leave Approvals**: Navigate to `/leave/approvals` to review subordinate leave requests with multi-stage approval buttons.
+3. **Task Reviews**: Navigate to `/tasks/reviews` to inspect completed tasks, request revisions, or grant approvals.
 
-### Audit Logs (Week 8)
-- `GET /api/audit-logs` — List immutable audit trail with filters and pagination
-- `GET /api/audit-logs/stats` — Summary metrics for audit dashboard
-
-### System Health (Week 8)
-- `GET /api/health` — Public health probe for uptime monitors
-- `GET /api/health/diagnostics` — Comprehensive diagnostic metrics (DB latency, memory, uptime, entity volumes)
+### 3. Employee Self-Service Workflow (`EMPLOYEE`)
+1. **Punch In / Out**: Navigate to `/attendance/my` to record live clock-in and clock-out timestamps.
+2. **Apply for Leave**: Navigate to `/leave/apply` to submit a leave request with remaining balance verification.
+3. **My Tasks & Payslips**: Navigate to `/tasks/my` to update assigned task statuses and `/payroll/my-payslips` to view and print official payslips.
 
 ---
 
 ## 💻 Local Development Setup
-
-### Prerequisites
-- Node.js >= 18.0.0
-- npm >= 9.0.0
-- PostgreSQL database (or Neon connection string)
 
 ### 1. Clone & Install
 ```bash
@@ -186,14 +159,7 @@ NODE_ENV="development"
 VITE_API_BASE_URL="http://localhost:5000"
 ```
 
-### 3. Database Migration & Push
-```bash
-cd apps/api
-npx prisma generate
-npx prisma db push
-```
-
-### 4. Running Locally
+### 3. Running Locally
 ```bash
 # Terminal 1: Backend
 cd apps/api
@@ -208,5 +174,5 @@ Visit `http://localhost:5173` to access the application.
 
 ---
 
-## 📄 License
-This project was developed as part of the Full-Stack Engineering Internship at Oppidan India.
+## 📄 License & Credits
+Developed as part of the Full-Stack Engineering Internship at Oppidan India.
