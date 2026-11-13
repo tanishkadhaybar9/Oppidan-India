@@ -100,6 +100,13 @@ export enum Permission {
   REPORTS_PAYROLL_READ = "reports:payroll:read",
   REPORTS_TASK_READ = "reports:task:read",
   REPORTS_EXPORT = "reports:export",
+
+  // Week 8: Administration, Audit, Notifications, Health
+  AUDIT_LOG_READ = "audit:log:read",
+  USER_MANAGE = "user:manage",
+  USER_READ = "user:read",
+  SYSTEM_HEALTH_READ = "system:health:read",
+  NOTIFICATION_MANAGE = "notification:manage",
 }
 
 export type ResourceScope = "COMPANY" | "DEPARTMENT" | "SUPERVISED" | "OWN";
@@ -182,6 +189,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REPORTS_PAYROLL_READ,
     Permission.REPORTS_TASK_READ,
     Permission.REPORTS_EXPORT,
+    Permission.AUDIT_LOG_READ,
+    Permission.USER_MANAGE,
+    Permission.USER_READ,
+    Permission.SYSTEM_HEALTH_READ,
+    Permission.NOTIFICATION_MANAGE,
   ],
   [UserRole.HR]: [
     Permission.EMPLOYEE_CREATE,
@@ -258,6 +270,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REPORTS_PAYROLL_READ,
     Permission.REPORTS_TASK_READ,
     Permission.REPORTS_EXPORT,
+    Permission.AUDIT_LOG_READ,
+    Permission.USER_MANAGE,
+    Permission.USER_READ,
+    Permission.SYSTEM_HEALTH_READ,
+    Permission.NOTIFICATION_MANAGE,
   ],
   [UserRole.MANAGER]: [
     Permission.EMPLOYEE_READ,
@@ -304,6 +321,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REPORTS_ASSET_READ,
     Permission.REPORTS_TASK_READ,
     Permission.REPORTS_EXPORT,
+    Permission.USER_READ,
   ],
   [UserRole.SUPERVISOR]: [
     Permission.EMPLOYEE_READ,

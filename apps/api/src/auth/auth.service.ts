@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { prisma } from "../lib/prisma.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
+import { logAudit } from "../audit/audit.service.js";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -171,6 +172,24 @@ export class AuthService {
       (error as unknown as { statusCode: number }).statusCode = 403;
       throw error;
     }
+
+    // Update last login timestamp & log audit asynchronously
+    prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    }).catch(() => {});
+
+    logAudit({
+      companyId: user.companyId,
+      userId: user.id,
+      userName: user.name,
+      userEmail: user.email,
+      userRole: user.role,
+      action: "LOGIN",
+      module: "AUTH",
+      recordId: user.id,
+      description: `User "${user.name}" logged in successfully`,
+    }).catch(() => {});
 
     const safeUser = this.toSafeUser(user);
     return this.createSession(safeUser);

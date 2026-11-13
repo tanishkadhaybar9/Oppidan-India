@@ -15,6 +15,11 @@ import assetRoutes from "./assets/asset.routes.js";
 import taskRoutes from "./tasks/task.routes.js";
 import payrollRoutes from "./payroll/payroll.routes.js";
 import reportRoutes from "./reports/reports.routes.js";
+import auditRoutes from "./audit/audit.routes.js";
+import settingsRoutes from "./settings/settings.routes.js";
+import notificationRoutes from "./notifications/notification.routes.js";
+import userRoutes from "./users/user.routes.js";
+import healthRoutes from "./health/health.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { generalRateLimiter } from "./middleware/rateLimiter.js";
 
@@ -59,15 +64,8 @@ app.use(generalRateLimiter);
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
-// Health check endpoint (Preserved)
-app.get("/api/health", (_req, res) => {
-  res.json({
-    success: true,
-    message: "ERMS API is running",
-    environment: process.env.NODE_ENV || "development",
-    timestamp: new Date().toISOString(),
-  });
-});
+// Health & Diagnostics
+app.use("/api/health", healthRoutes);
 
 // Authentication Routes
 app.use("/api/auth", authRoutes);
@@ -84,6 +82,10 @@ app.use("/api/assets", assetRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/payroll", payrollRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/audit-logs", auditRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/users", userRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

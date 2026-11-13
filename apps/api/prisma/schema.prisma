@@ -64,7 +64,24 @@ enum HolidayType {
 model Company {
   id        String   @id @default(uuid())
   name      String
+  logoUrl   String?
+  email     String?
+  phone     String?
+  website   String?
+  address   String?
+  city      String?
+  state     String?
+  country   String?  @default("India")
+  postalCode String?
+  timezone  String   @default("Asia/Kolkata")
+  dateFormat String  @default("DD/MM/YYYY")
+  timeFormat String  @default("12h")
+  currency  String   @default("INR")
+  workingDays String[] @default(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"])
+  workStartTime String @default("09:00")
+  workEndTime   String @default("18:00")
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 
   employees             Employee[]
   departments           Department[]
@@ -77,6 +94,7 @@ model Company {
   attendanceCorrections AttendanceCorrection[]
   attendanceAudits      AttendanceAudit[]
   attendanceSetting     CompanyAttendanceSetting?
+  leaveSetting          CompanyLeaveSetting?
 
   leaveTypes             LeaveType[]
   leaveBalances          LeaveBalance[]
@@ -96,6 +114,7 @@ model Company {
   salaryStructures       SalaryStructure[]
   salaryHistories        SalaryHistory[]
   payrolls               Payroll[]
+  auditLogs              AuditLog[]
 }
 
 model Department {
@@ -236,7 +255,9 @@ model User {
   salaryChanges              SalaryHistory[]    @relation("SalaryChangedBy")
   payrollsProcessed          Payroll[]          @relation("ProcessedPayrolls")
   payrollsApproved           Payroll[]          @relation("ApprovedPayrolls")
+  auditLogs                  AuditLog[]
 
+  lastLoginAt    DateTime?
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
 
@@ -408,6 +429,22 @@ model CompanyAttendanceSetting {
   weeklyOvertimeThresholdHours Float   @default(40.0)
   halfDayThresholdMinutes     Int      @default(240)
   fullDayThresholdMinutes     Int      @default(480)
+  allowRemoteClockIn          Boolean  @default(true)
+  requireLocation             Boolean  @default(false)
+
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+}
+
+model CompanyLeaveSetting {
+  id                          String   @id @default(uuid())
+  companyId                   String   @unique
+  company                     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leaveYearStart              String   @default("JANUARY") // JANUARY or APRIL
+  allowCarryForward           Boolean  @default(true)
+  maxCarryForwardDays         Int      @default(10)
+  requireDocumentProofDays    Int      @default(3)
+  maxConsecutiveDays          Int      @default(15)
 
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
@@ -991,6 +1028,37 @@ model Payslip {
 
   @@index([payrollId])
 }
+
+// =========================================================================
+// WEEK 8: SYSTEM ADMINISTRATION, AUDIT LOGS, AND ACTIVITY TRACKING
+// =========================================================================
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userName    String?
+  userEmail   String?
+  userRole    String?
+  action      String   // LOGIN, LOGOUT, CREATE, UPDATE, DELETE, APPROVE, REJECT, ASSIGN, STATUS_CHANGE
+  module      String   // AUTH, EMPLOYEE, DEPARTMENT, DESIGNATION, ATTENDANCE, LEAVE, ASSET, TASK, PAYROLL, SETTINGS, USER
+  recordId    String?
+  description String
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([action])
+  @@index([module])
+  @@index([createdAt])
+}
+
 
 
 

@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Bell, CheckCheck, ExternalLink } from "lucide-react";
+import { Bell, CheckCheck, ExternalLink, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   listNotifications,
   getUnreadNotificationCount,
   markNotificationRead,
   markAllNotificationsRead,
-} from "../services/leaveService";
-import type { Notification } from "../types/leave";
+} from "../services/notificationService";
+import type { NotificationItem } from "../types/notifications";
 
 export const NotificationBell: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -31,9 +31,12 @@ export const NotificationBell: React.FC = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const res = await listNotifications();
-      if (res.data) {
-        setNotifications(res.data);
+      const res = await listNotifications({ limit: 10 });
+      if (res.data?.notifications) {
+        setNotifications(res.data.notifications);
+        if (res.data.unreadCount !== undefined) {
+          setUnreadCount(res.data.unreadCount);
+        }
       }
     } catch {
       // silent
@@ -51,7 +54,6 @@ export const NotificationBell: React.FC = () => {
     }, 60000); // Poll every 60s when active
     return () => clearInterval(interval);
   }, []);
-
 
   useEffect(() => {
     if (isOpen) {
@@ -73,7 +75,7 @@ export const NotificationBell: React.FC = () => {
     };
   }, [isOpen]);
 
-  const handleNotificationClick = async (notif: Notification) => {
+  const handleNotificationClick = async (notif: NotificationItem) => {
     if (!notif.isRead) {
       try {
         await markNotificationRead(notif.id);
@@ -99,6 +101,11 @@ export const NotificationBell: React.FC = () => {
     } catch {
       // silent
     }
+  };
+
+  const handleViewAll = () => {
+    setIsOpen(false);
+    navigate("/notifications");
   };
 
   return (
@@ -139,7 +146,7 @@ export const NotificationBell: React.FC = () => {
             )}
           </div>
 
-          <div className="max-h-96 overflow-y-auto divide-y divide-[#eadbd2]/60">
+          <div className="max-h-80 overflow-y-auto divide-y divide-[#eadbd2]/60">
             {loading ? (
               <div className="py-8 text-center text-xs text-[#77716e]">
                 Loading notifications...
@@ -172,12 +179,14 @@ export const NotificationBell: React.FC = () => {
                       {notif.message}
                     </p>
                     <div className="mt-1 flex items-center justify-between text-[10px] text-[#77716e]">
-                      <span>{new Date(notif.createdAt).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}</span>
+                      <span>
+                        {new Date(notif.createdAt).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
                       {notif.link && (
                         <span className="text-[#f47b5b] flex items-center gap-0.5">
                           View <ExternalLink className="w-2.5 h-2.5" />
@@ -188,6 +197,15 @@ export const NotificationBell: React.FC = () => {
                 </div>
               ))
             )}
+          </div>
+
+          <div className="p-2.5 bg-[#fffcfb] border-t border-[#eadbd2] text-center">
+            <button
+              onClick={handleViewAll}
+              className="text-xs font-semibold text-[#f47b5b] hover:text-[#d95d3d] flex items-center justify-center gap-1 w-full py-1 hover:underline"
+            >
+              View all notifications <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}

@@ -53,6 +53,11 @@ import { LeaveReportPage } from "./pages/LeaveReportPage";
 import { AssetReportPage } from "./pages/AssetReportPage";
 import { PayrollReportPage } from "./pages/PayrollReportPage";
 import { TaskReportPage } from "./pages/TaskReportPage";
+import { OrganizationSettingsPage } from "./pages/OrganizationSettingsPage";
+import { UserManagementPage } from "./pages/UserManagementPage";
+import { AuditLogsPage } from "./pages/AuditLogsPage";
+import { SystemHealthPage } from "./pages/SystemHealthPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AppLayout } from "./components/AppLayout";
 
@@ -599,6 +604,58 @@ function App() {
               <ProtectedRoute allowedRoles={["OWNER", "HR", "MANAGER", "SUPERVISOR"]}>
                 <AppLayout>
                   <ReportsPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* System Administration & Settings (Week 8) */}
+          <Route
+            path="/settings/organization"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR"]}>
+                <AppLayout>
+                  <OrganizationSettingsPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/users"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR"]}>
+                <AppLayout>
+                  <UserManagementPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/audit-logs"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR"]}>
+                <AppLayout>
+                  <AuditLogsPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/health"
+            element={
+              <ProtectedRoute allowedRoles={["OWNER", "HR"]}>
+                <AppLayout>
+                  <SystemHealthPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <NotificationsPage />
                 </AppLayout>
               </ProtectedRoute>
             }

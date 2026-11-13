@@ -32,6 +32,8 @@ import {
   Receipt,
   FileSpreadsheet,
   CreditCard,
+  Activity,
+  Bell,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { NotificationBell } from "./NotificationBell";
@@ -342,10 +344,39 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: "Settings",
+    title: "Administration",
     items: [
       {
-        label: "Settings",
+        label: "Organization Settings",
+        path: "/settings/organization",
+        icon: <Building2 className="w-4 h-4" />,
+        roles: ["OWNER", "HR"],
+      },
+      {
+        label: "User Management",
+        path: "/settings/users",
+        icon: <Users className="w-4 h-4" />,
+        roles: ["OWNER", "HR"],
+      },
+      {
+        label: "Audit Logs",
+        path: "/settings/audit-logs",
+        icon: <FileText className="w-4 h-4" />,
+        roles: ["OWNER", "HR"],
+      },
+      {
+        label: "System Health",
+        path: "/settings/health",
+        icon: <Activity className="w-4 h-4" />,
+        roles: ["OWNER", "HR"],
+      },
+      {
+        label: "Notifications",
+        path: "/notifications",
+        icon: <Bell className="w-4 h-4" />,
+      },
+      {
+        label: "Account Settings",
         path: "/settings",
         icon: <Settings className="w-4 h-4" />,
       },
