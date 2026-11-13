@@ -428,11 +428,10 @@ export function TaskDetailPage() {
                           key={val}
                           type="button"
                           onClick={() => setNewProgress(val)}
-                          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-                            newProgress === val
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${newProgress === val
                               ? "bg-[#f47b5b] text-white"
                               : "bg-white border border-[#eadbd2] hover:bg-[#fff0e8]"
-                          }`}
+                            }`}
                         >
                           {val}%
                         </button>
@@ -761,11 +760,10 @@ export function TaskDetailPage() {
                   <button
                     type="button"
                     onClick={() => setReviewAction("APPROVE")}
-                    className={`py-2 px-3 text-xs font-semibold rounded-xl border flex items-center justify-center gap-1.5 transition-colors ${
-                      reviewAction === "APPROVE"
+                    className={`py-2 px-3 text-xs font-semibold rounded-xl border flex items-center justify-center gap-1.5 transition-colors ${reviewAction === "APPROVE"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-300 ring-2 ring-emerald-500/20"
                         : "bg-white text-slate-600 border-[#eadbd2] hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     Approve Completion
@@ -773,11 +771,10 @@ export function TaskDetailPage() {
                   <button
                     type="button"
                     onClick={() => setReviewAction("RETURN")}
-                    className={`py-2 px-3 text-xs font-semibold rounded-xl border flex items-center justify-center gap-1.5 transition-colors ${
-                      reviewAction === "RETURN"
+                    className={`py-2 px-3 text-xs font-semibold rounded-xl border flex items-center justify-center gap-1.5 transition-colors ${reviewAction === "RETURN"
                         ? "bg-amber-50 text-amber-700 border-amber-300 ring-2 ring-amber-500/20"
                         : "bg-white text-slate-600 border-[#eadbd2] hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <RotateCcw className="w-4 h-4 text-amber-600" />
                     Return for Changes
@@ -814,11 +811,10 @@ export function TaskDetailPage() {
                 <button
                   type="submit"
                   disabled={submittingReviewAction || !reviewFeedback.trim()}
-                  className={`px-4 py-2 text-xs font-semibold text-white rounded-xl disabled:opacity-50 transition-colors flex items-center gap-1.5 ${
-                    reviewAction === "APPROVE"
+                  className={`px-4 py-2 text-xs font-semibold text-white rounded-xl disabled:opacity-50 transition-colors flex items-center gap-1.5 ${reviewAction === "APPROVE"
                       ? "bg-emerald-600 hover:bg-emerald-700"
                       : "bg-amber-600 hover:bg-amber-700"
-                  }`}
+                    }`}
                 >
                   {submittingReviewAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {reviewAction === "APPROVE" ? "Confirm Approval" : "Return to Employee"}
