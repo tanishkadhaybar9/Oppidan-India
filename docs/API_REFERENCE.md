@@ -153,3 +153,4 @@
 |---|---|---|---|
 | `GET` | `/api/health` | Public | Liveness probe returning status, uptime, and database latency |
 | `GET` | `/api/health/diagnostics` | OWNER, HR | Comprehensive performance telemetry, memory, and error statistics |
+

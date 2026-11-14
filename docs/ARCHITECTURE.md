@@ -162,3 +162,4 @@ sequenceDiagram
 - **Ring-Buffer Error Tracker**: In-memory ring buffer capturing the 50 most recent operational exceptions.
 - **Neon Health Probes**: Real-time roundtrip query latency monitoring exposed on `/settings/health`.
 - **Global Error Boundary**: Client-side React error boundary preventing white-screen cascades on unexpected runtime errors.
+

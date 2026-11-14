@@ -13,7 +13,8 @@
     "test:week3": "tsx test-week3.ts",
     "test:week4": "tsx test-week4.ts",
     "test:week5": "tsx test-week5.ts",
-    "test:all": "tsx test-auth.ts && tsx test-week2.ts && tsx test-week3.ts && tsx test-week4.ts && tsx test-week5.ts"
+    "test:uat": "tsx test-uat-roles.ts",
+    "test:all": "tsx test-auth.ts && tsx test-week2.ts && tsx test-week3.ts && tsx test-week4.ts && tsx test-week5.ts && tsx test-uat-roles.ts"
   },
   "keywords": [],
   "author": "",

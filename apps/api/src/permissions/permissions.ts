@@ -196,6 +196,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.NOTIFICATION_MANAGE,
   ],
   [UserRole.HR]: [
+    Permission.COMPANY_SETTINGS_MANAGE,
     Permission.EMPLOYEE_CREATE,
     Permission.EMPLOYEE_READ,
     Permission.EMPLOYEE_UPDATE,
@@ -321,7 +322,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REPORTS_ASSET_READ,
     Permission.REPORTS_TASK_READ,
     Permission.REPORTS_EXPORT,
-    Permission.USER_READ,
   ],
   [UserRole.SUPERVISOR]: [
     Permission.EMPLOYEE_READ,

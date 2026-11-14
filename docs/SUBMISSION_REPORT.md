@@ -108,3 +108,4 @@ The platform provides end-to-end management of workforce lifecycles, real-time a
 ## 5. Conclusion
 
 The Oppidan ERMS project successfully fulfills all enterprise HRMS requirements outlined across the 10-week curriculum. The codebase is fully modular, type-safe, thoroughly documented, and running live in production.
+
