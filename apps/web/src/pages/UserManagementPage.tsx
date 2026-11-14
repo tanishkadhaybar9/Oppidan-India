@@ -11,7 +11,7 @@ import {
   AlertCircle,
   Check,
 } from "lucide-react";
-import { PageContainer, PageHeader } from "../components/common";
+import { PageContainer, PageHeader, ConfirmModal } from "../components/common";
 import { useAuth } from "../hooks/useAuth";
 import {
   listUsers,
@@ -49,6 +49,8 @@ export const UserManagementPage: React.FC = () => {
   const [matrixData, setMatrixData] = useState<Record<string, string[]> | null>(null);
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [statusConfirmTarget, setStatusConfirmTarget] = useState<UserItem | null>(null);
+  const [statusActionLoading, setStatusActionLoading] = useState(false);
 
   // Create form state
   const [createForm, setCreateForm] = useState<CreateUserPayload>({
@@ -189,16 +191,25 @@ export const UserManagementPage: React.FC = () => {
     }
   };
 
-  const handleToggleStatus = async (userItem: UserItem) => {
-    const newStatus: UserStatus = userItem.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+  const handleToggleStatus = (userItem: UserItem) => {
+    setStatusConfirmTarget(userItem);
+  };
+
+  const confirmToggleStatus = async () => {
+    if (!statusConfirmTarget) return;
+    const newStatus: UserStatus = statusConfirmTarget.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     try {
-      await updateUserStatus(userItem.id, newStatus);
+      setStatusActionLoading(true);
+      await updateUserStatus(statusConfirmTarget.id, newStatus);
       setUsers((prev) =>
-        prev.map((u) => (u.id === userItem.id ? { ...u, status: newStatus } : u))
+        prev.map((u) => (u.id === statusConfirmTarget.id ? { ...u, status: newStatus } : u))
       );
-      showSuccess(`User marked as ${newStatus}.`);
+      showSuccess(`User account ${statusConfirmTarget.name} marked as ${newStatus}.`);
+      setStatusConfirmTarget(null);
     } catch (err: any) {
       setError(err.message || "Failed to update user status.");
+    } finally {
+      setStatusActionLoading(false);
     }
   };
 
@@ -701,6 +712,27 @@ export const UserManagementPage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Status Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!statusConfirmTarget}
+        title={
+          statusConfirmTarget?.status === "ACTIVE"
+            ? `Deactivate ${statusConfirmTarget?.name}?`
+            : `Activate ${statusConfirmTarget?.name}?`
+        }
+        message={
+          statusConfirmTarget?.status === "ACTIVE"
+            ? `Are you sure you want to deactivate ${statusConfirmTarget?.name}'s account? They will immediately be barred from logging into the workspace until reactivated.`
+            : `Are you sure you want to reactivate ${statusConfirmTarget?.name}'s account? They will regain access to their assigned ${statusConfirmTarget?.role} dashboard.`
+        }
+        confirmLabel={
+          statusConfirmTarget?.status === "ACTIVE" ? "Deactivate User" : "Activate User"
+        }
+        variant={statusConfirmTarget?.status === "ACTIVE" ? "danger" : "primary"}
+        isLoading={statusActionLoading}
+        onConfirm={confirmToggleStatus}
+        onCancel={() => setStatusConfirmTarget(null)}
+      />
     </PageContainer>
   );
 };

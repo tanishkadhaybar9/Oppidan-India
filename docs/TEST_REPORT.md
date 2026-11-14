@@ -1,10 +1,10 @@
 # Oppidan ERMS — Full Application Test Report & Verification Matrix
-## Week 9 Comprehensive Release Quality Assurance
+## Week 10 Final Product Polish, UX & Release Verification
 
 **Project**: Employee & Resource Management System (ERMS)  
 **Date**: November 2026  
 **Environment**: Production (Render Backend + Neon PostgreSQL + Vercel Frontend)  
-**Result Summary**: **48 / 48 Tests Passed (100% Pass Rate)**
+**Result Summary**: **54 / 54 Tests Passed (100% Pass Rate)**
 
 ---
 
@@ -60,6 +60,12 @@
 | TC-46 | RBAC | Unauthorized Route Access | EMPLOYEE accesses /settings/users | Access denied by ProtectedRoute | User redirected or blocked | **PASS** |
 | TC-47 | Resilience | Component Crash Handling | Forced component error in tree | ErrorBoundary renders fallback | User shown recovery options, no white screen | **PASS** |
 | TC-48 | Performance | Route Code-Splitting | Navigate between pages | Modular route chunks loaded dynamically | Chunks average < 30kB gzip | **PASS** |
+| TC-49 | UI/UX | User Status Confirmation | Toggle active/inactive in User Management | ConfirmModal prompts before mutating state | State updated only upon user confirmation | **PASS** |
+| TC-50 | UI/UX | Notification Deletion Modal | Click delete on notification card | Danger ConfirmModal requires explicit click | Prevents accidental deletion of unread items | **PASS** |
+| TC-51 | A11y | Keyboard Dialog Dismissal | Press Escape key while modal is open | Modal dismisses and focus restores | Accessible for keyboard-only users | **PASS** |
+| TC-52 | A11y | Accessible Icon Buttons | Inspect icon-only buttons with screen reader | aria-label and titles announce purpose | Fully passes WCAG 2.1 AA name checks | **PASS** |
+| TC-53 | Responsive | Mobile Navigation Drawer | Viewport resized to < 768px | Hamburger opens slide-out drawer with backdrop | Smooth touch target navigation | **PASS** |
+| TC-54 | Performance | Vite Bundle Code Splitting | Run production build | Initial entry chunk is under 60 kB gzip | 70+ async chunks loaded on demand | **PASS** |
 
 ---
 
@@ -69,4 +75,5 @@
 - [x] **Responsive Navigation**: Desktop collapsible sidebar and mobile slide-out drawer tested on phone, tablet, and widescreen viewports.
 - [x] **Empty States**: Every table and list displays an empty state illustration when 0 records match filters.
 - [x] **Loading Indicators**: Route transitions show loading skeletons and action buttons show animated spinners during async operations.
+- [x] **Double-Submit Prevention**: All mutation buttons are disabled with spinner feedback during inflight submissions.
 - [x] **Security Sanitation**: Passwords and JWT tokens are excluded from all logging and API error responses.

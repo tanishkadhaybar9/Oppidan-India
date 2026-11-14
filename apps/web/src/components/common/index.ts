@@ -10,3 +10,5 @@ export { ErrorState } from "./ErrorState";
 export type { ErrorStateProps } from "./ErrorState";
 export { TableSkeleton, CardSkeleton } from "./LoadingSkeleton";
 export { ErrorBoundary } from "./ErrorBoundary";
+export { ConfirmModal } from "./ConfirmModal";
+export type { ConfirmModalProps } from "./ConfirmModal";

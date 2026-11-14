@@ -11,7 +11,7 @@ import {
   Inbox,
   Clock,
 } from "lucide-react";
-import { PageContainer, PageHeader } from "../components/common";
+import { PageContainer, PageHeader, ConfirmModal } from "../components/common";
 import {
   listNotifications,
   markNotificationRead,
@@ -42,6 +42,8 @@ export const NotificationsPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchNotifications = useCallback(async () => {
@@ -99,14 +101,23 @@ export const NotificationsPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
+  const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
     try {
-      await deleteNotification(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setDeleteLoading(true);
+      await deleteNotification(deleteConfirmId);
+      setNotifications((prev) => prev.filter((n) => n.id !== deleteConfirmId));
       setTotal((t) => Math.max(0, t - 1));
+      setDeleteConfirmId(null);
     } catch {
       // ignore
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -336,6 +347,16 @@ export const NotificationsPage: React.FC = () => {
           </div>
         )}
       </div>
+      <ConfirmModal
+        isOpen={!!deleteConfirmId}
+        title="Delete Notification?"
+        message="This notification will be permanently removed from your activity feed."
+        confirmLabel="Delete Notification"
+        variant="danger"
+        isLoading={deleteLoading}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirmId(null)}
+      />
     </PageContainer>
   );
 };

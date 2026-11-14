@@ -517,7 +517,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="absolute top-3 right-3">
-          <button onClick={() => setMobileOpen(false)} className="p-1 rounded-lg hover:bg-[#fff0e8]">
+          <button onClick={() => setMobileOpen(false)} aria-label="Close sidebar navigation" className="p-1 rounded-lg hover:bg-[#fff0e8]">
             <X className="w-4 h-4 text-[#77716e]" />
           </button>
         </div>
@@ -532,6 +532,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <button
               className="md:hidden p-2 rounded-xl hover:bg-[#fff0e8] text-[#77716e]"
               onClick={() => setMobileOpen(true)}
+              aria-label="Open sidebar navigation"
             >
               <Menu className="w-5 h-5" />
             </button>
